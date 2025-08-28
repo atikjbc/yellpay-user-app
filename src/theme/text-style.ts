@@ -1,0 +1,81 @@
+export const textStyle = {
+  H_W6_20: {
+    fontFamily: 'Hiragino Sans Bold',
+    fontSize: 20,
+    fontWeight: '600',
+    letterSpacing: 1,
+    lineHeight: 29,
+  },
+  H_W6_18: {
+    fontFamily: 'Hiragino Sans Bold',
+    fontSize: 18,
+    fontWeight: '600',
+    letterSpacing: 1,
+  },
+  H_W6_15: {
+    fontFamily: 'Hiragino Sans Bold',
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    lineHeight: 24,
+  },
+  H_W6_14: {
+    fontFamily: 'Hiragino Sans Bold',
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    lineHeight: 24,
+  },
+  H_W6_13: {
+    fontFamily: 'Hiragino Sans Bold',
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    lineHeight: 16,
+  },
+  H_W6_10: {
+    fontFamily: 'Hiragino Sans Bold',
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    lineHeight: 16,
+  },
+  R_16_M: {
+    fontFamily: 'Roboto Medium',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  R_16_R: {
+    fontFamily: 'Roboto Regular',
+    fontSize: 16,
+  },
+  R_18_M: {
+    fontFamily: 'Roboto Medium',
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  R_24_M: {
+    fontFamily: 'Roboto Medium',
+    fontSize: 24,
+    fontWeight: '500',
+  },
+  R_36_M: {
+    fontFamily: 'Roboto Medium',
+    fontSize: 36,
+    fontWeight: '500',
+  },
+  H_W3_15: {
+    fontFamily: 'Hiragino Sans',
+    fontSize: 15,
+    fontWeight: '300',
+    lineHeight: 24,
+    letterSpacing: 0.5,
+  },
+  H_W3_13: {
+    fontFamily: 'Hiragino Sans',
+    fontSize: 13,
+    fontWeight: '300',
+    lineHeight: 16,
+    letterSpacing: 0.5,
+  },
+};

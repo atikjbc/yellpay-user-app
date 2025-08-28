@@ -1,0 +1,16 @@
+export const colors = {
+  wt: '#ffffff',
+  wt1: '#F8FFF5',
+  rd: '#E60012',
+  yr: '#FFD900',
+  line: '#C9C9C9',
+  lrd: '#FFF1F1',
+  pnk: '#FC7B7B',
+  gr: '#F1F1F1',
+  bl: '#000000',
+  gr1: '#333333',
+  gr2: '#373A4D',
+  gr3: '#BDBDBD',
+  gr4: '#EEEEEE',
+  blu1: '#2F80ED',
+};
