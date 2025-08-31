@@ -17,8 +17,9 @@ import {
   Text,
   VStack,
 } from '@gluestack-ui/themed';
-import { Formik } from 'formik';
+import { yupResolver } from '@hookform/resolvers/yup';
 import React, { useRef } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import {
   Keyboard,
   Platform,
@@ -39,10 +40,14 @@ import LabelWithRequired from './LabelWIthRequired';
 const ValidationSchema = Yup.object({
   name: Yup.string().required('お名前を入力してください'),
   furigana: Yup.string()
-    .test('is-katakana', 'ふりがなで入力してください', value => {
-      if (!value) return true; // optional field
-      return /^[ァ-ヾ゛゜\s]*$/.test(value);
-    })
+    .test(
+      'is-katakana',
+      'ふりがなで入力してください',
+      (value: string | undefined) => {
+        if (!value) return true; // optional field
+        return /^[ァ-ヾ゛゜\s]*$/.test(value);
+      }
+    )
     .required('ふりがなで入力してください'),
   phoneNumber: Yup.string()
     .matches(/^\d{10,11}$/, 'ハイフンなしで電話番号を入力してください')
@@ -65,19 +70,19 @@ const ValidationSchema = Yup.object({
     Yup.string().required('就労支援分類を選択してください'),
 });
 
-const initialValues = {
-  name: '',
-  furigana: '',
-  phoneNumber: '',
-  email: '',
-  postalCodePart1: '',
-  postalCodePart2: '',
-  prefecture: '',
-  city: '',
-  streetAddress: '',
-  building: '',
-  work: '',
-  employmentSupportClassification: '',
+type FormValues = {
+  name: string;
+  furigana: string;
+  phoneNumber: string;
+  email: string;
+  postalCodePart1: string;
+  postalCodePart2: string;
+  prefecture: string;
+  city: string;
+  streetAddress: string;
+  building: string;
+  work: string;
+  employmentSupportClassification: string;
 };
 
 const RegistrationForm = ({
@@ -95,6 +100,35 @@ const RegistrationForm = ({
   const postalCode1Ref = useRef<TextInput>(null);
   const postalCode2Ref = useRef<TextInput>(null);
 
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+    watch,
+    trigger,
+  } = useForm<FormValues>({
+    resolver: yupResolver(ValidationSchema) as any,
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+    defaultValues: {
+      name: '',
+      furigana: '',
+      phoneNumber: '',
+      email: '',
+      postalCodePart1: '',
+      postalCodePart2: '',
+      prefecture: '',
+      city: '',
+      streetAddress: '',
+      building: '',
+      work: '',
+      employmentSupportClassification: '',
+    },
+  });
+
+  const watchedValues = watch();
+
   const scrollToInput = (yOffset: number = 0) => {
     setTimeout(() => {
       scrollViewRef.current?.scrollTo({
@@ -102,6 +136,34 @@ const RegistrationForm = ({
         animated: true,
       });
     }, 100);
+  };
+
+  const onSubmit = (values: FormValues) => {
+    Keyboard.dismiss();
+    setFormData(values);
+    handleNext();
+  };
+
+  const handleNameChange = async (text: string) => {
+    setValue('name', text);
+    const convertedText = await toConvertKatakana(text);
+    setValue('furigana', convertedText);
+    // Only trigger validation if there are existing errors
+    if (errors.name || errors.furigana) {
+      trigger(['name', 'furigana']);
+    }
+  };
+
+  const handlePostalCodeSearch = async () => {
+    const postalCode =
+      watchedValues.postalCodePart1 + watchedValues.postalCodePart2;
+    if (postalCode.length === 7) {
+      const address = await fetchJapaneseAddress(postalCode);
+      setValue('prefecture', address?.address1 || '');
+      setValue('city', (address?.address2 || '') + (address?.address3 || ''));
+      // Trigger validation for these fields
+      trigger(['prefecture', 'city', 'postalCodePart1', 'postalCodePart2']);
+    }
   };
 
   return (
@@ -134,37 +196,20 @@ const RegistrationForm = ({
             >
               会員情報登録
             </Text>
-            <Formik
-              initialValues={initialValues}
-              validationSchema={ValidationSchema}
-              validateOnChange={false}
-              onSubmit={values => {
-                Keyboard.dismiss();
-                setFormData(values);
-                handleNext();
-              }}
-            >
-              {({
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                values,
-                errors,
-                touched,
-                submitCount,
-                setFieldTouched,
-              }) => (
-                <VStack>
-                  <LabelWithRequired label="お名前" required />
+
+            <VStack>
+              <LabelWithRequired label="お名前" required />
+              <Controller
+                control={control}
+                name="name"
+                render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    onChangeText={async text => {
-                      handleChange('name')(text);
-                      const convertedText = await toConvertKatakana(text);
-                      handleChange('furigana')(convertedText);
+                    onChangeText={handleNameChange}
+                    onBlur={onBlur}
+                    onFocus={() => {
+                      scrollToInput(100);
                     }}
-                    onBlur={handleBlur('name')}
-                    onFocus={() => scrollToInput(100)}
-                    value={values.name}
+                    value={value}
                     placeholder="山田　花子"
                     placeholderTextColor={colors.line}
                     style={{
@@ -172,40 +217,48 @@ const RegistrationForm = ({
                       padding: 10,
                       borderRadius: 5,
                       paddingTop: 8,
-                      marginBottom:
-                        errors.name && (touched.name || submitCount > 0)
-                          ? 6
-                          : 16,
+                      marginBottom: errors.name ? 6 : 16,
                       marginTop: 4,
                       height: 48,
-                      borderColor:
-                        errors.name && (touched.name || submitCount > 0)
-                          ? colors.rd
-                          : colors.line,
+                      borderColor: errors.name ? colors.rd : colors.line,
                     }}
                   />
-                  {errors.name && (touched.name || submitCount > 0) && (
-                    <Text
-                      sx={{
-                        color: colors.wt,
-                        ...textStyle.H_W3_13,
-                        mb: 16,
-                        px: 4,
-                        py: 2,
-                        borderRadius: 4,
-                        backgroundColor: colors.rd,
-                      }}
-                    >
-                      {errors.name}
-                    </Text>
-                  )}
+                )}
+              />
+              {errors.name && (
+                <Text
+                  sx={{
+                    color: colors.wt,
+                    ...textStyle.H_W3_13,
+                    mb: 16,
+                    px: 4,
+                    py: 2,
+                    borderRadius: 4,
+                    backgroundColor: colors.rd,
+                  }}
+                >
+                  {errors.name.message}
+                </Text>
+              )}
 
-                  <LabelWithRequired label="ふりがな" required />
+              <LabelWithRequired label="ふりがな" required />
+              <Controller
+                control={control}
+                name="furigana"
+                render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    onChangeText={handleChange('furigana')}
-                    onBlur={handleBlur('furigana')}
-                    onFocus={() => scrollToInput(150)}
-                    value={values.furigana}
+                    onChangeText={text => {
+                      onChange(text);
+                      // Only trigger validation if there are existing errors
+                      if (errors.furigana) {
+                        trigger('furigana');
+                      }
+                    }}
+                    onBlur={onBlur}
+                    onFocus={() => {
+                      scrollToInput(150);
+                    }}
+                    value={value}
                     placeholder="やまだ　はなこ"
                     placeholderTextColor={colors.line}
                     style={{
@@ -213,41 +266,49 @@ const RegistrationForm = ({
                       padding: 10,
                       borderRadius: 5,
                       paddingTop: 8,
-                      marginBottom:
-                        errors.furigana && (touched.furigana || submitCount > 0)
-                          ? 6
-                          : 16,
+                      marginBottom: errors.furigana ? 6 : 16,
                       marginTop: 4,
                       height: 48,
-                      borderColor:
-                        errors.furigana && (touched.furigana || submitCount > 0)
-                          ? colors.rd
-                          : colors.line,
+                      borderColor: errors.furigana ? colors.rd : colors.line,
                     }}
                   />
-                  {errors.furigana && (touched.furigana || submitCount > 0) && (
-                    <Text
-                      sx={{
-                        color: colors.wt,
-                        ...textStyle.H_W3_13,
-                        mb: 16,
-                        px: 4,
-                        py: 2,
-                        borderRadius: 4,
-                        backgroundColor: colors.rd,
-                      }}
-                    >
-                      {errors.furigana}
-                    </Text>
-                  )}
+                )}
+              />
+              {errors.furigana && (
+                <Text
+                  sx={{
+                    color: colors.wt,
+                    ...textStyle.H_W3_13,
+                    mb: 16,
+                    px: 4,
+                    py: 2,
+                    borderRadius: 4,
+                    backgroundColor: colors.rd,
+                  }}
+                >
+                  {errors.furigana.message}
+                </Text>
+              )}
 
-                  <LabelWithRequired label="電話番号" required />
+              <LabelWithRequired label="電話番号" required />
+              <Controller
+                control={control}
+                name="phoneNumber"
+                render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    onChangeText={handleChange('phoneNumber')}
-                    onBlur={handleBlur('phoneNumber')}
-                    onFocus={() => scrollToInput(200)}
+                    onChangeText={text => {
+                      onChange(text);
+                      // Only trigger validation if there are existing errors
+                      if (errors.phoneNumber) {
+                        trigger('phoneNumber');
+                      }
+                    }}
+                    onBlur={onBlur}
+                    onFocus={() => {
+                      scrollToInput(200);
+                    }}
                     maxLength={11}
-                    value={values.phoneNumber}
+                    value={value}
                     placeholder="1234567989"
                     keyboardType="numeric"
                     placeholderTextColor={colors.line}
@@ -256,43 +317,48 @@ const RegistrationForm = ({
                       padding: 10,
                       borderRadius: 5,
                       paddingTop: 5,
-                      marginBottom:
-                        errors.phoneNumber &&
-                        (touched.phoneNumber || submitCount > 0)
-                          ? 6
-                          : 16,
+                      marginBottom: errors.phoneNumber ? 6 : 16,
                       marginTop: 4,
                       height: 48,
-                      borderColor:
-                        errors.phoneNumber &&
-                        (touched.phoneNumber || submitCount > 0)
-                          ? colors.rd
-                          : colors.line,
+                      borderColor: errors.phoneNumber ? colors.rd : colors.line,
                     }}
                   />
-                  {errors.phoneNumber &&
-                    (touched.phoneNumber || submitCount > 0) && (
-                      <Text
-                        sx={{
-                          color: colors.wt,
-                          ...textStyle.H_W3_13,
-                          mb: 16,
-                          px: 4,
-                          py: 2,
-                          borderRadius: 4,
-                          backgroundColor: colors.rd,
-                        }}
-                      >
-                        {errors.phoneNumber}
-                      </Text>
-                    )}
+                )}
+              />
+              {errors.phoneNumber && (
+                <Text
+                  sx={{
+                    color: colors.wt,
+                    ...textStyle.H_W3_13,
+                    mb: 16,
+                    px: 4,
+                    py: 2,
+                    borderRadius: 4,
+                    backgroundColor: colors.rd,
+                  }}
+                >
+                  {errors.phoneNumber.message}
+                </Text>
+              )}
 
-                  <LabelWithRequired label="メールアドレス" required />
+              <LabelWithRequired label="メールアドレス" required />
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    onChangeText={handleChange('email')}
-                    onBlur={handleBlur('email')}
-                    onFocus={() => scrollToInput(250)}
-                    value={values.email}
+                    onChangeText={text => {
+                      onChange(text);
+                      // Only trigger validation if there are existing errors
+                      if (errors.email) {
+                        trigger('email');
+                      }
+                    }}
+                    onBlur={onBlur}
+                    onFocus={() => {
+                      scrollToInput(250);
+                    }}
+                    value={value}
                     placeholder="yellpay@email.com"
                     keyboardType="email-address"
                     placeholderTextColor={colors.line}
@@ -301,50 +367,59 @@ const RegistrationForm = ({
                       padding: 10,
                       borderRadius: 5,
                       paddingTop: 8,
-                      marginBottom:
-                        errors.email && (touched.email || submitCount > 0)
-                          ? 6
-                          : 16,
+                      marginBottom: errors.email ? 6 : 16,
                       marginTop: 4,
                       height: 48,
-                      borderColor:
-                        errors.email && (touched.email || submitCount > 0)
-                          ? colors.rd
-                          : colors.line,
+                      borderColor: errors.email ? colors.rd : colors.line,
                     }}
                   />
-                  {errors.email && (touched.email || submitCount > 0) && (
-                    <Text
-                      sx={{
-                        color: colors.wt,
-                        ...textStyle.H_W3_13,
-                        mb: 16,
-                        px: 4,
-                        py: 2,
-                        borderRadius: 4,
-                        backgroundColor: colors.rd,
-                      }}
-                    >
-                      {errors.email}
-                    </Text>
-                  )}
+                )}
+              />
+              {errors.email && (
+                <Text
+                  sx={{
+                    color: colors.wt,
+                    ...textStyle.H_W3_13,
+                    mb: 16,
+                    px: 4,
+                    py: 2,
+                    borderRadius: 4,
+                    backgroundColor: colors.rd,
+                  }}
+                >
+                  {errors.email.message}
+                </Text>
+              )}
 
-                  <LabelWithRequired label="郵便番号" required />
-                  <HStack alignItems="center" justifyContent="space-between">
-                    <HStack alignItems="center">
+              <LabelWithRequired label="郵便番号" required />
+              <HStack alignItems="center" justifyContent="space-between">
+                <HStack alignItems="center">
+                  <Controller
+                    control={control}
+                    name="postalCodePart1"
+                    render={({ field: { onChange, onBlur, value } }) => (
                       <TextInput
                         ref={postalCode1Ref}
                         onChangeText={text => {
-                          handleChange('postalCodePart1')(text);
+                          onChange(text);
                           // Auto-focus to second field when 3 digits are entered
                           if (text.length === 3) {
                             postalCode2Ref.current?.focus();
                           }
+                          // Only trigger validation if there are existing errors
+                          if (
+                            errors.postalCodePart1 ||
+                            errors.postalCodePart2
+                          ) {
+                            trigger(['postalCodePart1', 'postalCodePart2']);
+                          }
                         }}
-                        onBlur={handleBlur('postalCodePart1')}
-                        onFocus={() => scrollToInput(300)}
+                        onBlur={onBlur}
+                        onFocus={() => {
+                          scrollToInput(300);
+                        }}
                         maxLength={3}
-                        value={values.postalCodePart1}
+                        value={value}
                         placeholder="120"
                         keyboardType="numeric"
                         placeholderTextColor={colors.line}
@@ -354,49 +429,58 @@ const RegistrationForm = ({
                           borderRadius: 5,
                           paddingTop: 8,
                           marginBottom:
-                            errors.postalCodePart1 &&
-                            (touched.postalCodePart1 || submitCount > 0)
+                            errors.postalCodePart1 || errors.postalCodePart2
                               ? 6
                               : 16,
                           marginTop: 4,
                           height: 48,
                           width: 75,
                           borderColor:
-                            errors.postalCodePart1 &&
-                            (touched.postalCodePart1 || submitCount > 0)
+                            errors.postalCodePart1 || errors.postalCodePart2
                               ? colors.rd
                               : colors.line,
                         }}
                       />
-                      <Divider
-                        sx={{
-                          height: 1,
-                          mt:
-                            (errors.postalCodePart1 ||
-                              errors.postalCodePart2) &&
-                            (touched.postalCodePart1 ||
-                              touched.postalCodePart2 ||
-                              submitCount > 0)
-                              ? 0
-                              : -8,
-                          width: 11,
-                          mx: 6,
-                          backgroundColor: '#333333',
-                        }}
-                      />
+                    )}
+                  />
+                  <Divider
+                    sx={{
+                      height: 1,
+                      mt:
+                        errors.postalCodePart1 || errors.postalCodePart2
+                          ? 0
+                          : -8,
+                      width: 11,
+                      mx: 6,
+                      backgroundColor: '#333333',
+                    }}
+                  />
+                  <Controller
+                    control={control}
+                    name="postalCodePart2"
+                    render={({ field: { onChange, onBlur, value } }) => (
                       <TextInput
                         ref={postalCode2Ref}
                         onChangeText={text => {
-                          handleChange('postalCodePart2')(text);
+                          onChange(text);
                           // Auto-focus back to first field when all digits are removed
                           if (text.length === 0) {
                             postalCode1Ref.current?.focus();
                           }
+                          // Only trigger validation if there are existing errors
+                          if (
+                            errors.postalCodePart1 ||
+                            errors.postalCodePart2
+                          ) {
+                            trigger(['postalCodePart1', 'postalCodePart2']);
+                          }
                         }}
-                        onBlur={handleBlur('postalCodePart2')}
-                        onFocus={() => scrollToInput(300)}
+                        onBlur={onBlur}
+                        onFocus={() => {
+                          scrollToInput(300);
+                        }}
                         maxLength={4}
-                        value={values.postalCodePart2}
+                        value={value}
                         placeholder="4567"
                         keyboardType="numeric"
                         placeholderTextColor={colors.line}
@@ -406,85 +490,66 @@ const RegistrationForm = ({
                           borderRadius: 5,
                           paddingTop: 8,
                           marginBottom:
-                            (errors.postalCodePart2 ||
-                              errors.postalCodePart1) &&
-                            (touched.postalCodePart2 ||
-                              touched.postalCodePart1 ||
-                              submitCount > 0)
+                            errors.postalCodePart2 || errors.postalCodePart1
                               ? 6
                               : 16,
                           marginTop: 4,
                           height: 48,
                           width: 96,
                           borderColor:
-                            (errors.postalCodePart2 ||
-                              errors.postalCodePart1) &&
-                            (touched.postalCodePart2 ||
-                              touched.postalCodePart1 ||
-                              submitCount > 0)
+                            errors.postalCodePart2 || errors.postalCodePart1
                               ? colors.rd
                               : colors.line,
                         }}
                       />
-                    </HStack>
-                    <Button
-                      variant="outline"
-                      borderColor={colors.rd}
-                      sx={{
-                        height: 48,
-                        marginBottom:
-                          (errors.postalCodePart1 || errors.postalCodePart2) &&
-                          (touched.postalCodePart1 ||
-                            touched.postalCodePart2 ||
-                            submitCount > 0)
-                            ? 4
-                            : 16,
-                      }}
-                      onPress={async () => {
-                        const address = await fetchJapaneseAddress(
-                          values.postalCodePart1 + values.postalCodePart2
-                        );
-                        handleChange('prefecture')(address?.address1 || '');
-                        handleChange('city')(
-                          (address?.address2 || '') + (address?.address3 || '')
-                        );
-                        setFieldTouched('prefecture');
-                        setFieldTouched('city');
-                        setFieldTouched('postalCodePart1');
-                        setFieldTouched('postalCodePart2');
-                      }}
-                    >
-                      <Text sx={{ color: colors.rd, ...textStyle.H_W6_14 }}>
-                        住所検索
-                      </Text>
-                    </Button>
-                  </HStack>
-                  {(errors.postalCodePart1 || errors.postalCodePart2) &&
-                    (touched.postalCodePart1 ||
-                      touched.postalCodePart2 ||
-                      submitCount > 0) && (
-                      <Text
-                        sx={{
-                          color: colors.wt,
-                          ...textStyle.H_W3_13,
-                          mb: 16,
-                          px: 4,
-                          py: 2,
-                          borderRadius: 4,
-                          backgroundColor: colors.rd,
-                        }}
-                      >
-                        {errors.postalCodePart1 || errors.postalCodePart2}
-                      </Text>
                     )}
+                  />
+                </HStack>
+                <Button
+                  variant="outline"
+                  borderColor={colors.rd}
+                  sx={{
+                    height: 48,
+                    marginBottom:
+                      errors.postalCodePart1 || errors.postalCodePart2 ? 4 : 16,
+                  }}
+                  onPress={handlePostalCodeSearch}
+                >
+                  <Text sx={{ color: colors.rd, ...textStyle.H_W6_14 }}>
+                    住所検索
+                  </Text>
+                </Button>
+              </HStack>
+              {(errors.postalCodePart1 || errors.postalCodePart2) && (
+                <Text
+                  sx={{
+                    color: colors.wt,
+                    ...textStyle.H_W3_13,
+                    mb: 16,
+                    px: 4,
+                    py: 2,
+                    borderRadius: 4,
+                    backgroundColor: colors.rd,
+                  }}
+                >
+                  {errors.postalCodePart1?.message ||
+                    errors.postalCodePart2?.message}
+                </Text>
+              )}
 
-                  <LabelWithRequired label="都道府県" required />
-                  <HStack position="relative" width={216}>
+              <LabelWithRequired label="都道府県" required />
+              <HStack position="relative" width={216}>
+                <Controller
+                  control={control}
+                  name="prefecture"
+                  render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                      onChangeText={handleChange('prefecture')}
-                      onBlur={handleBlur('prefecture')}
-                      onFocus={() => scrollToInput(350)}
-                      value={values.prefecture}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      onFocus={() => {
+                        scrollToInput(350);
+                      }}
+                      value={value}
                       placeholder="東京都"
                       keyboardType="default"
                       placeholderTextColor={colors.line}
@@ -494,53 +559,54 @@ const RegistrationForm = ({
                         padding: 10,
                         borderRadius: 5,
                         paddingTop: 8,
-                        marginBottom:
-                          errors.prefecture &&
-                          (touched.prefecture || submitCount > 0)
-                            ? 6
-                            : 16,
+                        marginBottom: errors.prefecture ? 6 : 16,
                         marginTop: 4,
                         width: 216,
                         height: 48,
-                        borderColor:
-                          errors.prefecture &&
-                          (touched.prefecture || submitCount > 0)
-                            ? colors.rd
-                            : colors.line,
+                        borderColor: errors.prefecture
+                          ? colors.rd
+                          : colors.line,
                       }}
                     />
-                    <Ionicons
-                      name="chevron-down"
-                      size={24}
-                      color={colors.line}
-                      position="absolute"
-                      right={10}
-                      top={17}
-                    />
-                  </HStack>
-                  {errors.prefecture &&
-                    (touched.prefecture || submitCount > 0) && (
-                      <Text
-                        sx={{
-                          color: colors.wt,
-                          ...textStyle.H_W3_13,
-                          mb: 16,
-                          px: 4,
-                          py: 2,
-                          borderRadius: 4,
-                          backgroundColor: colors.rd,
-                        }}
-                      >
-                        {errors.prefecture}
-                      </Text>
-                    )}
+                  )}
+                />
+                <Ionicons
+                  name="chevron-down"
+                  size={24}
+                  color={colors.line}
+                  position="absolute"
+                  right={10}
+                  top={17}
+                />
+              </HStack>
+              {errors.prefecture && (
+                <Text
+                  sx={{
+                    color: colors.wt,
+                    ...textStyle.H_W3_13,
+                    mb: 16,
+                    px: 4,
+                    py: 2,
+                    borderRadius: 4,
+                    backgroundColor: colors.rd,
+                  }}
+                >
+                  {errors.prefecture.message}
+                </Text>
+              )}
 
-                  <LabelWithRequired label="市区町村" required />
+              <LabelWithRequired label="市区町村" required />
+              <Controller
+                control={control}
+                name="city"
+                render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    onChangeText={handleChange('city')}
-                    onBlur={handleBlur('city')}
-                    onFocus={() => scrollToInput(250)}
-                    value={values.city}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    onFocus={() => {
+                      scrollToInput(250);
+                    }}
+                    value={value}
                     placeholder="○○区"
                     editable={false}
                     keyboardType="default"
@@ -550,40 +616,48 @@ const RegistrationForm = ({
                       padding: 10,
                       borderRadius: 5,
                       paddingTop: 8,
-                      marginBottom:
-                        errors.city && (touched.city || submitCount > 0)
-                          ? 6
-                          : 16,
+                      marginBottom: errors.city ? 6 : 16,
                       marginTop: 4,
                       height: 48,
-                      borderColor:
-                        errors.city && (touched.city || submitCount > 0)
-                          ? colors.rd
-                          : colors.line,
+                      borderColor: errors.city ? colors.rd : colors.line,
                     }}
                   />
-                  {errors.city && (touched.city || submitCount > 0) && (
-                    <Text
-                      sx={{
-                        color: colors.wt,
-                        ...textStyle.H_W3_13,
-                        mb: 16,
-                        px: 4,
-                        py: 2,
-                        borderRadius: 4,
-                        backgroundColor: colors.rd,
-                      }}
-                    >
-                      {errors.city}
-                    </Text>
-                  )}
+                )}
+              />
+              {errors.city && (
+                <Text
+                  sx={{
+                    color: colors.wt,
+                    ...textStyle.H_W3_13,
+                    mb: 16,
+                    px: 4,
+                    py: 2,
+                    borderRadius: 4,
+                    backgroundColor: colors.rd,
+                  }}
+                >
+                  {errors.city.message}
+                </Text>
+              )}
 
-                  <LabelWithRequired label="番地" required />
+              <LabelWithRequired label="番地" required />
+              <Controller
+                control={control}
+                name="streetAddress"
+                render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    onChangeText={handleChange('streetAddress')}
-                    onBlur={handleBlur('streetAddress')}
-                    onFocus={() => scrollToInput(300)}
-                    value={values.streetAddress}
+                    onChangeText={text => {
+                      onChange(text);
+                      // Only trigger validation if there are existing errors
+                      if (errors.streetAddress) {
+                        trigger('streetAddress');
+                      }
+                    }}
+                    onBlur={onBlur}
+                    onFocus={() => {
+                      scrollToInput(300);
+                    }}
+                    value={value}
                     placeholder="１−１−１"
                     keyboardType="default"
                     placeholderTextColor={colors.line}
@@ -592,42 +666,50 @@ const RegistrationForm = ({
                       padding: 10,
                       borderRadius: 5,
                       paddingTop: 8,
-                      marginBottom:
-                        errors.streetAddress &&
-                        (touched.streetAddress || submitCount > 0)
-                          ? 6
-                          : 16,
+                      marginBottom: errors.streetAddress ? 6 : 16,
                       marginTop: 4,
                       height: 48,
-                      borderColor:
-                        errors.streetAddress &&
-                        (touched.streetAddress || submitCount > 0)
-                          ? colors.rd
-                          : colors.line,
+                      borderColor: errors.streetAddress
+                        ? colors.rd
+                        : colors.line,
                     }}
                   />
-                  {errors.streetAddress &&
-                    (touched.streetAddress || submitCount > 0) && (
-                      <Text
-                        sx={{
-                          color: colors.wt,
-                          ...textStyle.H_W3_13,
-                          mb: 16,
-                          px: 4,
-                          py: 2,
-                          borderRadius: 4,
-                          backgroundColor: colors.rd,
-                        }}
-                      >
-                        {errors.streetAddress}
-                      </Text>
-                    )}
-                  <LabelWithRequired label="建物名" required={false} />
+                )}
+              />
+              {errors.streetAddress && (
+                <Text
+                  sx={{
+                    color: colors.wt,
+                    ...textStyle.H_W3_13,
+                    mb: 16,
+                    px: 4,
+                    py: 2,
+                    borderRadius: 4,
+                    backgroundColor: colors.rd,
+                  }}
+                >
+                  {errors.streetAddress.message}
+                </Text>
+              )}
+
+              <LabelWithRequired label="建物名" required={false} />
+              <Controller
+                control={control}
+                name="building"
+                render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    onChangeText={handleChange('building')}
-                    onBlur={handleBlur('building')}
-                    onFocus={() => scrollToInput(300)}
-                    value={values.building}
+                    onChangeText={text => {
+                      onChange(text);
+                      // Only trigger validation if there are existing errors
+                      if (errors.building) {
+                        trigger('building');
+                      }
+                    }}
+                    onBlur={onBlur}
+                    onFocus={() => {
+                      scrollToInput(300);
+                    }}
+                    value={value}
                     keyboardType="default"
                     placeholderTextColor={colors.line}
                     style={{
@@ -635,22 +717,29 @@ const RegistrationForm = ({
                       padding: 10,
                       borderRadius: 5,
                       paddingTop: 8,
-                      marginBottom:
-                        errors.building && (touched.building || submitCount > 0)
-                          ? 6
-                          : 16,
+                      marginBottom: errors.building ? 6 : 16,
                       marginTop: 4,
                       height: 48,
-                      borderColor:
-                        errors.building && (touched.building || submitCount > 0)
-                          ? colors.rd
-                          : colors.line,
+                      borderColor: errors.building ? colors.rd : colors.line,
                     }}
                   />
-                  <LabelWithRequired label="職業" required />
+                )}
+              />
+
+              <LabelWithRequired label="職業" required />
+              <Controller
+                control={control}
+                name="work"
+                render={({ field: { onChange, value } }) => (
                   <Select
-                    onValueChange={handleChange('work')}
-                    selectedValue={values.work}
+                    onValueChange={newValue => {
+                      onChange(newValue);
+                      // Only trigger validation if there are existing errors
+                      if (errors.work) {
+                        trigger('work');
+                      }
+                    }}
+                    selectedValue={value}
                   >
                     <SelectTrigger
                       variant="outline"
@@ -661,15 +750,9 @@ const RegistrationForm = ({
                         borderRadius: 5,
                         padding: 5,
                         paddingTop: 8,
-                        marginBottom:
-                          errors.work && (touched.work || submitCount > 0)
-                            ? 6
-                            : 16,
+                        marginBottom: errors.work ? 6 : 16,
                         marginTop: 4,
-                        borderColor:
-                          errors.work && (touched.work || submitCount > 0)
-                            ? colors.rd
-                            : colors.line,
+                        borderColor: errors.work ? colors.rd : colors.line,
                       }}
                     >
                       <SelectInput placeholder="職業を選択してください" />
@@ -696,28 +779,38 @@ const RegistrationForm = ({
                       </SelectContent>
                     </SelectPortal>
                   </Select>
-                  {errors.work && (touched.work || submitCount > 0) && (
-                    <Text
-                      sx={{
-                        color: colors.wt,
-                        ...textStyle.H_W3_13,
-                        mb: 16,
-                        px: 4,
-                        py: 2,
-                        borderRadius: 4,
-                        backgroundColor: colors.rd,
-                      }}
-                    >
-                      {errors.work}
-                    </Text>
-                  )}
+                )}
+              />
+              {errors.work && (
+                <Text
+                  sx={{
+                    color: colors.wt,
+                    ...textStyle.H_W3_13,
+                    mb: 16,
+                    px: 4,
+                    py: 2,
+                    borderRadius: 4,
+                    backgroundColor: colors.rd,
+                  }}
+                >
+                  {errors.work.message}
+                </Text>
+              )}
 
-                  <LabelWithRequired label="就労支援分類" required />
+              <LabelWithRequired label="就労支援分類" required />
+              <Controller
+                control={control}
+                name="employmentSupportClassification"
+                render={({ field: { onChange, value } }) => (
                   <Select
-                    onValueChange={handleChange(
-                      'employmentSupportClassification'
-                    )}
-                    selectedValue={values.employmentSupportClassification}
+                    onValueChange={newValue => {
+                      onChange(newValue);
+                      // Only trigger validation if there are existing errors
+                      if (errors.employmentSupportClassification) {
+                        trigger('employmentSupportClassification');
+                      }
+                    }}
+                    selectedValue={value}
                   >
                     <SelectTrigger
                       variant="outline"
@@ -728,19 +821,13 @@ const RegistrationForm = ({
                         borderRadius: 5,
                         padding: 5,
                         paddingTop: 8,
-                        marginBottom:
-                          errors.employmentSupportClassification &&
-                          (touched.employmentSupportClassification ||
-                            submitCount > 0)
-                            ? 6
-                            : 16,
+                        marginBottom: errors.employmentSupportClassification
+                          ? 6
+                          : 16,
                         marginTop: 4,
-                        borderColor:
-                          errors.employmentSupportClassification &&
-                          (touched.employmentSupportClassification ||
-                            submitCount > 0)
-                            ? colors.rd
-                            : colors.line,
+                        borderColor: errors.employmentSupportClassification
+                          ? colors.rd
+                          : colors.line,
                       }}
                     >
                       <SelectInput placeholder="就労支援分類を選択してください" />
@@ -767,53 +854,50 @@ const RegistrationForm = ({
                       </SelectContent>
                     </SelectPortal>
                   </Select>
-                  {errors.employmentSupportClassification &&
-                    (touched.employmentSupportClassification ||
-                      submitCount > 0) && (
-                      <Text
-                        sx={{
-                          color: colors.wt,
-                          ...textStyle.H_W3_13,
-                          mb: 16,
-                          px: 4,
-                          py: 2,
-                          borderRadius: 4,
-                          backgroundColor: colors.rd,
-                        }}
-                      >
-                        {errors.employmentSupportClassification}
-                      </Text>
-                    )}
-                  <Button
-                    mt={30}
-                    variant="solid"
-                    sx={{
-                      borderColor: colors.rd,
-                      backgroundColor: colors.rd,
-                      borderRadius: 10,
-                      paddingHorizontal: 24,
-                      paddingVertical: 12,
-                      width: '100%',
-                      height: 52,
-                      boxShadow: '0px 0px 10px 0px #D5242A4F',
-                    }}
-                    onPress={() => {
-                      Keyboard.dismiss();
-                      handleSubmit();
-                    }}
-                  >
-                    <Text
-                      sx={{
-                        ...textStyle.H_W6_15,
-                        color: colors.wt,
-                      }}
-                    >
-                      入力情報を確認
-                    </Text>
-                  </Button>
-                </VStack>
+                )}
+              />
+              {errors.employmentSupportClassification && (
+                <Text
+                  sx={{
+                    color: colors.wt,
+                    ...textStyle.H_W3_13,
+                    mb: 16,
+                    px: 4,
+                    py: 2,
+                    borderRadius: 4,
+                    backgroundColor: colors.rd,
+                  }}
+                >
+                  {errors.employmentSupportClassification.message}
+                </Text>
               )}
-            </Formik>
+
+              <Button
+                mt={30}
+                variant="solid"
+                sx={{
+                  borderColor: colors.rd,
+                  backgroundColor: colors.rd,
+                  borderRadius: 10,
+                  paddingHorizontal: 24,
+                  paddingVertical: 12,
+                  width: '100%',
+                  height: 52,
+                  boxShadow: '0px 0px 10px 0px #D5242A4F',
+                }}
+                onPress={handleSubmit(onSubmit as any)}
+                isDisabled={isSubmitting}
+              >
+                <Text
+                  sx={{
+                    ...textStyle.H_W6_15,
+                    color: colors.wt,
+                  }}
+                >
+                  入力情報を確認
+                </Text>
+              </Button>
+            </VStack>
           </VStack>
           <View style={{ position: 'absolute', bottom: 0, width: '100%' }}>
             <Indicator total={totalSteps} activeIndex={activeIndex} />

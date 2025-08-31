@@ -1,6 +1,7 @@
 export const colors = {
   wt: '#ffffff',
   wt1: '#F8FFF5',
+  whtShadow: '#BDBDBD4D',
   rd: '#E60012',
   yr: '#FFD900',
   line: '#C9C9C9',
@@ -12,5 +13,7 @@ export const colors = {
   gr2: '#373A4D',
   gr3: '#BDBDBD',
   gr4: '#EEEEEE',
+  gr5: '#828282',
+  gr6: '#E0E0E0',
   blu1: '#2F80ED',
 };

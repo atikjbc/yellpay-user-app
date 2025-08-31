@@ -1,38 +1,37 @@
 import { Text } from '@gluestack-ui/themed';
-import { FormikErrors } from 'formik';
 import { TextInput } from 'react-native';
 import { colors } from '../theme/colors';
 import { textStyle } from '../theme/text-style';
 
 type FieldInputProps = {
-  // Broaden types to align with Formik's handlers
-  handleChange: (e: React.ChangeEvent<any>) => void;
-  handleBlur: (e: React.FocusEvent<any, Element>) => void;
-  values: any;
+  // Updated types for React Hook Form compatibility
+  onChangeText: (text: string) => void;
+  onBlur: () => void;
+  value: string;
   placeholder: string;
   name: string;
-  errors: FormikErrors<any>;
-  errorMessage: string | undefined;
+  error?: string;
+  errorMessage?: string;
 };
 
 const FieldInput = ({
-  handleChange,
-  handleBlur,
-  values,
+  onChangeText,
+  onBlur,
+  value,
   placeholder,
   name,
-  errors,
+  error,
   errorMessage,
 }: FieldInputProps) => {
-  const hasError = Boolean(errors?.[name]);
-  const message = errors?.[name] ?? errorMessage;
+  const hasError = Boolean(error);
+  const message = error ?? errorMessage;
 
   return (
     <>
       <TextInput
-        onChangeText={e => handleChange(e as any)}
-        onBlur={e => handleBlur(e as any)}
-        value={values[name]}
+        onChangeText={onChangeText}
+        onBlur={onBlur}
+        value={value}
         placeholder={placeholder}
         style={{
           borderWidth: 1,

@@ -33,6 +33,12 @@ export const textStyle = {
     letterSpacing: 0.5,
     lineHeight: 16,
   },
+  H_W6_12: {
+    fontFamily: 'Hiragino Sans Bold',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.12,
+  },
   H_W6_10: {
     fontFamily: 'Hiragino Sans Bold',
     fontSize: 10,
