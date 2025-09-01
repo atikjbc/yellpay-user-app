@@ -7,17 +7,23 @@ import {
   View,
   VStack,
 } from '@gluestack-ui/themed';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { BannerSlider, BottomNavigation, Card } from '../../src/components';
 import { colors } from '../../src/theme/colors';
 import { textStyle } from '../../src/theme/text-style';
 
 const Home = () => {
+  const router = useRouter();
+
+  const handleCardManagement = () => {
+    router.push('/card-management');
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView
-        style={{ backgroundColor: colors.wt, flex: 1, marginBottom: 70 }}
+        style={{ backgroundColor: colors.wt, flex: 1, marginBottom: 100 }}
       >
         <StatusBar style="dark" />
         <Stack.Screen
@@ -38,12 +44,13 @@ const Home = () => {
           {/* <Card cardType="mastercard" />
           <Card cardType="jcb" />
           <Card cardType="amex" />
-          <Card cardType="diners" />
-          <Card /> */}
+          <Card cardType="diners" /> */}
+          {/* <Card /> */}
         </VStack>
         <VStack p={16} gap={16}>
           <HStack>
             <View
+              onTouchStart={handleCardManagement}
               style={{
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -55,6 +62,7 @@ const Home = () => {
               }}
             >
               <Image
+                alt="card-management"
                 source={require('../../assets/images/card-management.png')}
                 style={{ width: 48, height: 52 }}
               />
@@ -80,6 +88,7 @@ const Home = () => {
               }}
             >
               <Image
+                alt="transaction-history"
                 source={require('../../assets/images/transaction-history.png')}
                 style={{ width: 40, height: 40 }}
               />
@@ -105,6 +114,7 @@ const Home = () => {
             }}
           >
             <Image
+              alt="find-store"
               source={require('../../assets/images/find-store.png')}
               style={{ width: 50, height: 35 }}
             />

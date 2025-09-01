@@ -46,6 +46,11 @@ export const textStyle = {
     letterSpacing: 0.5,
     lineHeight: 16,
   },
+  R_12_M: {
+    fontFamily: 'Roboto Medium',
+    fontSize: 10,
+    fontWeight: '600',
+  },
   R_16_M: {
     fontFamily: 'Roboto Medium',
     fontSize: 16,

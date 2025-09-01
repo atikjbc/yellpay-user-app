@@ -23,11 +23,12 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   borderRadius = 20,
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
+
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.8}
+      activeOpacity={1}
       style={{
         backgroundColor: colors.whtShadow,
         position: 'absolute',
@@ -40,7 +41,6 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         style={{
           backgroundColor,
           height,
-          // alignItems: 'center',
           justifyContent: 'center',
           paddingHorizontal: 22,
           elevation: 5,

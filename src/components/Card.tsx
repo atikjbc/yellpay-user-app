@@ -6,17 +6,18 @@ import { colors } from '../theme/colors';
 
 interface ResponsiveCardProps {
   cardType?: string;
+  isSmall?: boolean;
 }
 
-const ResponsiveCard = ({ cardType }: ResponsiveCardProps) => {
+const ResponsiveCard = ({ cardType, isSmall }: ResponsiveCardProps) => {
   return (
     <View
       style={{
         position: 'relative',
-        margin: 16,
+        margin: isSmall ? 0 : 16,
         width: '90%', // responsive width
         aspectRatio: 16 / 9, // keeps image responsive
-        borderRadius: 12,
+        borderRadius: isSmall ? 6 : 12,
         overflow: 'hidden',
         alignSelf: 'center',
       }}
@@ -56,23 +57,33 @@ const ResponsiveCard = ({ cardType }: ResponsiveCardProps) => {
         alt="Responsive"
         style={{
           position: 'absolute',
-          width: 47,
-          height: 30,
+          width: isSmall ? 15.6666666667 : 47,
+          height: isSmall ? 10 : 30,
           resizeMode: 'cover',
           zIndex: 900,
-          bottom: cardType !== 'visa' ? 29 : 24,
+          bottom: isSmall ? 7 : cardType !== 'visa' ? 29 : 24,
           right:
             cardType === 'visa'
-              ? 120
+              ? isSmall
+                ? 40
+                : 120
               : cardType === 'mastercard'
-                ? 110
+                ? isSmall
+                  ? 35
+                  : 110
                 : cardType === 'jcb'
-                  ? 100
+                  ? isSmall
+                    ? 37
+                    : 100
                   : cardType === 'amex'
-                    ? 100
+                    ? isSmall
+                      ? 35
+                      : 100
                     : cardType === 'diners'
-                      ? 100
-                      : 24,
+                      ? isSmall
+                        ? 37
+                        : 100
+                      : 14,
         }}
       />
       {cardType === 'visa' && (
@@ -81,12 +92,12 @@ const ResponsiveCard = ({ cardType }: ResponsiveCardProps) => {
           alt="Responsive"
           style={{
             position: 'absolute',
-            width: 80,
-            height: 25,
+            width: isSmall ? 24 : 80,
+            height: isSmall ? 7.5 : 25,
             resizeMode: 'cover',
             zIndex: 900,
-            bottom: 24,
-            right: 24,
+            bottom: isSmall ? 7 : 24,
+            right: isSmall ? 14 : 24,
           }}
         />
       )}
@@ -96,12 +107,12 @@ const ResponsiveCard = ({ cardType }: ResponsiveCardProps) => {
           alt="Responsive"
           style={{
             position: 'absolute',
-            width: 60,
-            height: 40,
+            width: isSmall ? 15 : 60,
+            height: isSmall ? 10 : 40,
             resizeMode: 'cover',
             zIndex: 900,
-            bottom: 24,
-            right: 24,
+            bottom: isSmall ? 7 : 24,
+            right: isSmall ? 14 : 24,
           }}
         />
       )}
@@ -111,12 +122,12 @@ const ResponsiveCard = ({ cardType }: ResponsiveCardProps) => {
           alt="Responsive"
           style={{
             position: 'absolute',
-            width: 55,
-            height: 40,
+            width: isSmall ? 16.5 : 55,
+            height: isSmall ? 12 : 40,
             resizeMode: 'cover',
             zIndex: 900,
-            bottom: 24,
-            right: 24,
+            bottom: isSmall ? 7 : 24,
+            right: isSmall ? 15 : 24,
           }}
         />
       )}
@@ -126,13 +137,13 @@ const ResponsiveCard = ({ cardType }: ResponsiveCardProps) => {
           alt="Responsive"
           style={{
             position: 'absolute',
-            width: 55,
-            height: 55,
+            width: isSmall ? 14 : 55,
+            height: isSmall ? 14 : 55,
             resizeMode: 'cover',
             zIndex: 900,
-            bottom: 24,
+            bottom: isSmall ? 6 : 24,
+            right: isSmall ? 15 : 24,
             backgroundColor: colors.wt,
-            right: 24,
           }}
         />
       )}
@@ -142,12 +153,12 @@ const ResponsiveCard = ({ cardType }: ResponsiveCardProps) => {
           alt="Responsive"
           style={{
             position: 'absolute',
-            width: 55,
-            height: 40,
+            width: isSmall ? 16.5 : 55,
+            height: isSmall ? 12 : 40,
             resizeMode: 'cover',
             zIndex: 900,
-            bottom: 24,
-            right: 24,
+            bottom: isSmall ? 6 : 24,
+            right: isSmall ? 15 : 24,
           }}
         />
       )}
