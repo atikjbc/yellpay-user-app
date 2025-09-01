@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
   Dimensions,
@@ -23,6 +24,7 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
+  const router = useRouter();
 
   React.useEffect(() => {
     if (!autoPlay) return;
@@ -64,24 +66,28 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
         scrollEventThrottle={16}
         style={{ width: screenWidth - 32, height: 90, borderRadius: 3 }}
       >
-        <Image
-          source={require('../../assets/images/banner-1.png')}
-          alt="Banner 1"
-          style={{
-            width: screenWidth - 32,
-            height: 90,
-            resizeMode: 'contain',
-          }}
-        />
-        <Image
-          source={require('../../assets/images/banner-2.png')}
-          alt="Banner 2"
-          style={{
-            width: screenWidth - 32,
-            height: 90,
-            resizeMode: 'contain',
-          }}
-        />
+        <TouchableOpacity onPress={() => router.push('/user-guide')}>
+          <Image
+            source={require('../../assets/images/banner-1.png')}
+            alt="Banner 1"
+            style={{
+              width: screenWidth - 32,
+              height: 90,
+              resizeMode: 'contain',
+            }}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Image
+            source={require('../../assets/images/banner-2.png')}
+            alt="Banner 2"
+            style={{
+              width: screenWidth - 32,
+              height: 90,
+              resizeMode: 'contain',
+            }}
+          />
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Round Indicators */}
