@@ -9,6 +9,7 @@ import {
 } from '@gluestack-ui/themed';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { TouchableOpacity } from 'react-native';
 import { BannerSlider, BottomNavigation, Card } from '../../src/components';
 import { colors } from '../../src/theme/colors';
 import { textStyle } from '../../src/theme/text-style';
@@ -50,8 +51,9 @@ const Home = () => {
         </VStack>
         <VStack p={16} gap={16}>
           <HStack>
-            <View
-              onTouchStart={handleCardManagement}
+            <TouchableOpacity
+              onPress={handleCardManagement}
+              activeOpacity={0.8}
               style={{
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -77,7 +79,7 @@ const Home = () => {
               >
                 カード管理
               </Text>
-            </View>
+            </TouchableOpacity>
             <View
               style={{
                 alignItems: 'center',

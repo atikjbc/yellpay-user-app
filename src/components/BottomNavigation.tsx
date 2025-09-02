@@ -1,6 +1,7 @@
 import { HStack, Text, VStack } from '@gluestack-ui/themed';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react';
+import { usePathname, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { Image, Platform, TouchableOpacity, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { textStyle } from '../theme/text-style';
@@ -23,6 +24,20 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   borderRadius = 20,
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setActiveIndex(
+      pathname === '/home'
+        ? 0
+        : pathname === '/settings'
+          ? 3
+          : pathname === '/announcements'
+            ? 2
+            : 0
+    );
+  }, [pathname]);
 
   return (
     <TouchableOpacity
@@ -67,7 +82,10 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         <HStack justifyContent="space-between">
           <HStack justifyContent="space-between" space="md">
             <TouchableOpacity
-              onPress={() => setActiveIndex(0)}
+              onPress={() => {
+                setActiveIndex(0);
+                router.push('/home');
+              }}
               activeOpacity={0.8}
             >
               <VStack alignItems="center">
@@ -186,7 +204,10 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           </View>
           <HStack justifyContent="space-between" width="33.3333333333%">
             <TouchableOpacity
-              onPress={() => setActiveIndex(2)}
+              onPress={() => {
+                setActiveIndex(2);
+                router.push('/announcements');
+              }}
               activeOpacity={0.8}
             >
               <VStack alignItems="center">
@@ -210,7 +231,10 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
               </VStack>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setActiveIndex(3)}
+              onPress={() => {
+                setActiveIndex(3);
+                router.push('/settings');
+              }}
               activeOpacity={0.8}
             >
               <VStack alignItems="center">
