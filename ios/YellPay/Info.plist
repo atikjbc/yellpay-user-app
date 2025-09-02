@@ -75,5 +75,7 @@
     <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
+    <key>NSCameraUsageDescription</key>
+    <string>This app needs access to camera to take photos for card registration and document scanning.</string>
   </dict>
 </plist>

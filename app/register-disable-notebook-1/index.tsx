@@ -113,7 +113,9 @@ const RegisterDisableNotebook1 = () => {
             </HStack>
           </VStack>
           <TouchableOpacity
-            onPress={() => {}}
+            onPress={() => {
+              router.push('/register-disable-notebook-2');
+            }}
             style={{
               borderRadius: 10,
               height: 56,

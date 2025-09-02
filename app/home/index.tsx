@@ -37,6 +37,7 @@ const Home = () => {
               fontWeight: '600',
               fontSize: 18,
             },
+            headerLeft: () => <></>,
           }}
         />
         <VStack backgroundColor={colors.gr4}>

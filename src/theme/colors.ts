@@ -15,5 +15,6 @@ export const colors = {
   gr4: '#EEEEEE',
   gr5: '#828282',
   gr6: '#E0E0E0',
+  gr7: '#4F4F4F',
   blu1: '#2F80ED',
 };

@@ -14,9 +14,15 @@ export interface StepProps {
   steps: StepItem[];
   currentStep?: number;
   style?: any;
+  documentUploadHelper?: boolean;
 }
 
-const Step: React.FC<StepProps> = ({ steps, currentStep = 0, style }) => {
+const Step: React.FC<StepProps> = ({
+  steps,
+  currentStep = 0,
+  style,
+  documentUploadHelper = false,
+}) => {
   const getStepBackgroundColor = (index: number, step: StepItem) => {
     if (step.isVisited) {
       return colors.rd; // Red background for visited
@@ -103,7 +109,7 @@ const Step: React.FC<StepProps> = ({ steps, currentStep = 0, style }) => {
               {step.label}
             </Text>
           </VStack>
-          {index < steps.length - 1 && (
+          {index < steps.length - 1 && index !== 0 && (
             <HStack
               height={2}
               minWidth={60}
@@ -111,6 +117,33 @@ const Step: React.FC<StepProps> = ({ steps, currentStep = 0, style }) => {
               marginBottom={24}
               backgroundColor={getConnectorColor(index)}
             />
+          )}
+          {!documentUploadHelper && index === 0 ? (
+            <HStack
+              height={2}
+              minWidth={60}
+              marginHorizontal={5}
+              marginBottom={24}
+              backgroundColor={getConnectorColor(index)}
+            />
+          ) : (
+            index === 0 &&
+            documentUploadHelper && (
+              <HStack marginHorizontal={5}>
+                <HStack
+                  height={2}
+                  minWidth={30}
+                  marginBottom={24}
+                  backgroundColor={colors.rd}
+                />
+                <HStack
+                  height={2}
+                  minWidth={30}
+                  marginBottom={24}
+                  backgroundColor={getConnectorColor(index)}
+                />
+              </HStack>
+            )
           )}
         </React.Fragment>
       ))}
