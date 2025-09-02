@@ -11,7 +11,7 @@ import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeft, Plus } from 'lucide-react-native';
 import { useState } from 'react';
-import { TouchableOpacity } from 'react-native';
+import { Platform, TouchableOpacity } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { CardListItem } from '../../src/components';
 import CustomModal from '../../src/components/CustomModal';
@@ -64,7 +64,20 @@ const CardManagement = () => {
             borderRadius: 10,
             height: 48,
             width: '100%',
-            elevation: 3,
+            ...Platform.select({
+              ios: {
+                shadowColor: '#000',
+                shadowOffset: {
+                  width: 0,
+                  height: -1,
+                },
+                shadowOpacity: 0.1,
+                shadowRadius: 20,
+              },
+              android: {
+                elevation: 3,
+              },
+            }),
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -126,7 +139,20 @@ const CardManagement = () => {
             borderRadius: 10,
             height: 48,
             width: '100%',
-            elevation: 3,
+            ...Platform.select({
+              ios: {
+                shadowColor: '#000',
+                shadowOffset: {
+                  width: 0,
+                  height: -1,
+                },
+                shadowOpacity: 0.1,
+                shadowRadius: 20,
+              },
+              android: {
+                elevation: 3,
+              },
+            }),
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -175,7 +201,20 @@ const CardManagement = () => {
               borderRadius: 10,
               height: 48,
               width: '100%',
-              elevation: 3,
+              ...Platform.select({
+                ios: {
+                  shadowColor: '#000',
+                  shadowOffset: {
+                    width: 0,
+                    height: -1,
+                  },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 20,
+                },
+                android: {
+                  elevation: 3,
+                },
+              }),
               alignItems: 'center',
               justifyContent: 'center',
             }}
@@ -210,7 +249,20 @@ const CardManagement = () => {
               borderRadius: 10,
               height: 48,
               width: '100%',
-              elevation: 3,
+              ...Platform.select({
+                ios: {
+                  shadowColor: '#000',
+                  shadowOffset: {
+                    width: 0,
+                    height: -1,
+                  },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 20,
+                },
+                android: {
+                  elevation: 3,
+                },
+              }),
               alignItems: 'center',
               justifyContent: 'center',
             }}

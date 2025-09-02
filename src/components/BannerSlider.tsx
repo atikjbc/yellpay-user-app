@@ -77,7 +77,9 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
             }}
           />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push('/register-disable-notebook-1')}
+        >
           <Image
             source={require('../../assets/images/banner-2.png')}
             alt="Banner 2"

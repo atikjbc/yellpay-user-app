@@ -348,10 +348,23 @@ const CardRegistration = () => {
                           borderRadius: 10,
                           height: 56,
                           width: '100%',
-                          elevation: 3,
                           alignItems: 'center',
                           justifyContent: 'center',
                           opacity: isSubmitting ? 0.7 : 1,
+                          ...Platform.select({
+                            ios: {
+                              shadowColor: '#000',
+                              shadowOffset: {
+                                width: 0,
+                                height: -1,
+                              },
+                              shadowOpacity: 0.1,
+                              shadowRadius: 20,
+                            },
+                            android: {
+                              elevation: 3,
+                            },
+                          }),
                         }}
                       >
                         <LinearGradient
@@ -487,10 +500,23 @@ const CardRegistration = () => {
                       height: 56,
                       marginTop: 40,
                       width: '100%',
-                      elevation: 3,
                       alignItems: 'center',
                       justifyContent: 'center',
                       opacity: isSubmitting ? 0.7 : 1,
+                      ...Platform.select({
+                        ios: {
+                          shadowColor: '#000',
+                          shadowOffset: {
+                            width: 0,
+                            height: -1,
+                          },
+                          shadowOpacity: 0.1,
+                          shadowRadius: 20,
+                        },
+                        android: {
+                          elevation: 3,
+                        },
+                      }),
                     }}
                   >
                     <LinearGradient

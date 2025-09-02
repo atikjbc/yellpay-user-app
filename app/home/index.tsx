@@ -23,7 +23,7 @@ const Home = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView
-        style={{ backgroundColor: colors.wt, flex: 1, marginBottom: 100 }}
+        style={{ backgroundColor: colors.wt, flex: 1, paddingBottom: 100 }}
       >
         <StatusBar style="dark" />
         <Stack.Screen

@@ -7,6 +7,7 @@ import {
   Text,
   VStack,
 } from '@gluestack-ui/themed';
+import { Platform } from 'react-native';
 import { colors } from '../theme/colors';
 import { textStyle } from '../theme/text-style';
 
@@ -27,10 +28,20 @@ const CustomModal = ({
       <ModalContent backgroundColor={colors.wt}>
         <ModalHeader
           backgroundColor={colors.wt}
-          shadowOffset={{ width: 0, height: 2 }}
-          shadowOpacity={0.25}
-          shadowRadius={3.84}
-          elevation={5}
+          {...Platform.select({
+            ios: {
+              shadowColor: '#000',
+              shadowOffset: {
+                width: 0,
+                height: -1,
+              },
+              shadowOpacity: 0.1,
+              shadowRadius: 20,
+            },
+            android: {
+              elevation: 5,
+            },
+          })}
         >
           <VStack width="100%" justifyContent="center" alignItems="center">
             <Text

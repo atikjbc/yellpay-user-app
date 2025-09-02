@@ -43,7 +43,6 @@ const OnboardingScreen = () => {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
     >
       <Safe>
         <VStack flex={1}>

@@ -1,7 +1,7 @@
 import { HStack, Text, VStack } from '@gluestack-ui/themed';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Image, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, TouchableOpacity, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { textStyle } from '../theme/text-style';
 
@@ -19,7 +19,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   disabled = false,
   backgroundColor = colors.wt,
   textColor = colors.gr5,
-  height = 70,
+  height = 84,
   borderRadius = 20,
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -35,6 +35,8 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         bottom: 0,
         left: 0,
         right: 0,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
       }}
     >
       <View
@@ -43,10 +45,23 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           height,
           justifyContent: 'center',
           paddingHorizontal: 22,
-          elevation: 5,
           borderRadius: borderRadius,
           borderBottomLeftRadius: 0,
           borderBottomRightRadius: 0,
+          ...Platform.select({
+            ios: {
+              shadowColor: '#000',
+              shadowOffset: {
+                width: 0,
+                height: -1,
+              },
+              shadowOpacity: 0.1,
+              shadowRadius: 20,
+            },
+            android: {
+              elevation: 10,
+            },
+          }),
         }}
       >
         <HStack justifyContent="space-between">
@@ -68,6 +83,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                   sx={{
                     ...textStyle.H_W6_12,
                     color: activeIndex === 0 ? colors.rd : textColor,
+                    mt: 10,
                   }}
                 >
                   HOME
@@ -91,6 +107,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                   sx={{
                     ...textStyle.H_W6_12,
                     color: activeIndex === 1 ? colors.rd : textColor,
+                    mt: 10,
                   }}
                 >
                   簡単ログイン
@@ -108,13 +125,26 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                 borderRadius: 50,
                 height: 58,
                 width: 58,
-                elevation: 3,
                 alignItems: 'center',
                 justifyContent: 'center',
+                ...Platform.select({
+                  ios: {
+                    shadowColor: '#000',
+                    shadowOffset: {
+                      width: 0,
+                      height: -1,
+                    },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 20,
+                  },
+                  android: {
+                    elevation: 3,
+                  },
+                }),
               }}
             >
               <LinearGradient
-                colors={['#D5242A', '#F7575D']}
+                colors={['#dd3136', '#F7575D']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 0 }}
                 style={{
@@ -126,9 +156,9 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
               />
               {/* Additional gradient layer for more radial effect */}
               <LinearGradient
-                colors={['#D5242A', 'transparent']}
+                colors={['#F7575D', '#D5242A']}
                 start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 0.5 }}
+                end={{ x: 0.1, y: 0.5 }}
                 style={{
                   position: 'absolute',
                   borderRadius: 100,
@@ -147,7 +177,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                 ...textStyle.H_W6_12,
                 color: textColor,
                 textAlign: 'center',
-                marginTop: 21,
+                marginTop: 31.5,
                 zIndex: 100,
               }}
             >
@@ -172,6 +202,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                   sx={{
                     ...textStyle.H_W6_12,
                     color: activeIndex === 2 ? colors.rd : textColor,
+                    mt: 10,
                   }}
                 >
                   お知らせ
@@ -195,6 +226,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                   sx={{
                     ...textStyle.H_W6_12,
                     color: activeIndex === 3 ? colors.rd : textColor,
+                    mt: 10,
                   }}
                 >
                   設定

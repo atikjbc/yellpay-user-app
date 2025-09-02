@@ -1440,8 +1440,6 @@ PODS:
     - React-jsiexecutor
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
-  - react-native-month-year-picker (1.9.0):
-    - React
   - react-native-safe-area-context (5.4.0):
     - DoubleConversion
     - glog
@@ -1863,6 +1861,30 @@ PODS:
     - React-logger (= 0.79.6)
     - React-perflogger (= 0.79.6)
     - React-utils (= 0.79.6)
+  - RNDateTimePicker (8.4.4):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - RNDeviceInfo (14.0.4):
     - React-Core
   - RNGestureHandler (2.24.0):
@@ -2187,7 +2209,6 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
-  - react-native-month-year-picker (from `../node_modules/react-native-month-year-picker`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2221,6 +2242,7 @@ DEPENDENCIES:
   - ReactAppDependencyProvider (from `build/generated/ios`)
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - RNDeviceInfo (from `../node_modules/react-native-device-info`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
@@ -2355,8 +2377,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
-  react-native-month-year-picker:
-    :path: "../node_modules/react-native-month-year-picker"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-webview:
@@ -2423,6 +2443,8 @@ EXTERNAL SOURCES:
     :path: build/generated/ios
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  RNDateTimePicker:
+    :path: "../node_modules/@react-native-community/datetimepicker"
   RNDeviceInfo:
     :path: "../node_modules/react-native-device-info"
   RNGestureHandler:
@@ -2497,7 +2519,6 @@ SPEC CHECKSUMS:
   React-logger: 6eca7d3c56341f3b001cf67d40452acfc4be7fa1
   React-Mapbuffer: 14cd6e1e5d4d088b3a8b2260f5aa8bba305462b0
   React-microtasksnativemodule: f3d90da65ab56fb854b77b70e3a8f63561cdabc6
-  react-native-month-year-picker: 948797e981ca502427024a34b17f545eb321bbff
   react-native-safe-area-context: 00d03dc688ba86664be66f9e3f203fc7d747d899
   react-native-webview: cde150463e7caa49b316b0ed1871e7ef8193bef4
   React-NativeModulesApple: a398af5d9799bb49f0b0fabab09c362a3899d8bc
@@ -2531,6 +2552,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: d3b706769c10ab0a19199a4d39b73544fffdc549
   ReactCodegen: a3a9eea115b375f25e54643eafa9a7bcdf307f1b
   ReactCommon: d7a6354467ffb346f88312e828764b87d4c81c75
+  RNDateTimePicker: fbf10bdffd59d64302f328a3cf941c6d3debb6e1
   RNDeviceInfo: feea80a690d2bde1fe51461cf548039258bd03f2
   RNGestureHandler: ccf4105b125002bd88e39d2a1f2b7e6001bcdf34
   RNReanimated: 8b24b49fc13fce9a6e1729ccff645a63d2b7a6d1
