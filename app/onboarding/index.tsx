@@ -26,6 +26,7 @@ export type FormData = {
   building: string;
   work: string;
   employmentSupportClassification: string;
+  referralCode: string;
 };
 
 const OnboardingScreen = () => {

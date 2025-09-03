@@ -68,6 +68,7 @@ const ValidationSchema = Yup.object({
   work: Yup.string().required('職業を選択してください'),
   employmentSupportClassification:
     Yup.string().required('就労支援分類を選択してください'),
+  referralCode: Yup.string().optional(),
 });
 
 type FormValues = {
@@ -83,6 +84,7 @@ type FormValues = {
   building: string;
   work: string;
   employmentSupportClassification: string;
+  referralCode: string;
 };
 
 const RegistrationForm = ({
@@ -124,6 +126,7 @@ const RegistrationForm = ({
       building: '',
       work: '',
       employmentSupportClassification: '',
+      referralCode: '',
     },
   });
 
@@ -871,6 +874,42 @@ const RegistrationForm = ({
                   {errors.employmentSupportClassification.message}
                 </Text>
               )}
+
+              <LabelWithRequired label="招待コード" required={false} />
+              <Controller
+                control={control}
+                name="referralCode"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    onChangeText={text => {
+                      onChange(text);
+                      // Only trigger validation if there are existing errors
+                      if (errors.referralCode) {
+                        trigger('referralCode');
+                      }
+                    }}
+                    onBlur={onBlur}
+                    onFocus={() => {
+                      scrollToInput(300);
+                    }}
+                    value={value}
+                    keyboardType="default"
+                    placeholderTextColor={colors.line}
+                    style={{
+                      borderWidth: 1,
+                      padding: 10,
+                      borderRadius: 5,
+                      paddingTop: 8,
+                      marginBottom: errors.referralCode ? 6 : 16,
+                      marginTop: 4,
+                      height: 48,
+                      borderColor: errors.referralCode
+                        ? colors.rd
+                        : colors.line,
+                    }}
+                  />
+                )}
+              />
 
               <Button
                 mt={30}

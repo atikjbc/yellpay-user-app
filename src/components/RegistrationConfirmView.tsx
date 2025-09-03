@@ -200,6 +200,19 @@ const RegistrationConfirmView = ({
             >
               {formData.employmentSupportClassification}
             </Text>
+
+            <LabelWithRequired label="招待コード" required={false} />
+            <Text
+              sx={{
+                ...textStyle.H_W3_15,
+                color: colors.gr2,
+                px: 16,
+                pt: 6,
+                pb: 16,
+              }}
+            >
+              {formData.referralCode}
+            </Text>
           </VStack>
 
           <VStack alignItems="center" mt={40}>

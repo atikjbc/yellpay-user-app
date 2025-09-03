@@ -107,7 +107,9 @@ const Home = () => {
               </Text>
             </View>
           </HStack>
-          <View
+          <TouchableOpacity
+            onPress={() => router.push('/shop-search')}
+            activeOpacity={0.8}
             style={{
               alignItems: 'center',
               justifyContent: 'center',
@@ -131,7 +133,7 @@ const Home = () => {
             >
               近くの店舗を探す
             </Text>
-          </View>
+          </TouchableOpacity>
         </VStack>
         <BannerSlider
           images={[
