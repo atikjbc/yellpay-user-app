@@ -3,6 +3,7 @@ import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeft } from 'lucide-react-native';
 import { TouchableOpacity } from 'react-native';
+import RouteSdkDemo from '../../src/components/RouteSdkDemo';
 import { colors } from '../../src/theme/colors';
 
 const TermsOfServices = () => {
@@ -32,7 +33,9 @@ const TermsOfServices = () => {
             ),
           }}
         />
-        <VStack paddingHorizontal={16} paddingVertical={24}></VStack>
+        <VStack paddingHorizontal={16} paddingVertical={24}>
+          <RouteSdkDemo />
+        </VStack>
       </ScrollView>
     </SafeAreaView>
   );
