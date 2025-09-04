@@ -8,205 +8,87 @@ import com.platfield.unidsdk.routecode.RouteAuth
 import com.platfield.unidsdk.routecode.RoutePay
 import com.platfield.unidsdk.routecode.EnvironmentMode
 import org.json.JSONObject
+import java.util.concurrent.atomic.AtomicBoolean
 
 class YellPayModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
     companion object {
         const val AUTH_DOMAIN = "auth.unid.net"
-        const val PAYMENT_DOMAIN = "yellpay.unid.net"
+        const val PAYMENT_DOMAIN = "dev-pay.unid.net"
         const val SERVICE_ID = "yellpay"
     }
 
     override fun getName() = "YellPay"
 
-    // ===== BASIC BRIDGE TEST =====
-    
-    @ReactMethod
-    fun testBridge(promise: Promise) {
-        android.util.Log.d("YellPay", "=== BRIDGE TEST CALLED ===")
-        try {
-            val result = WritableNativeMap()
-            result.putString("message", "Bridge is working!")
-            result.putString("timestamp", System.currentTimeMillis().toString())
-            result.putBoolean("success", true)
-            android.util.Log.d("YellPay", "Bridge test successful")
-            promise.resolve(result)
-        } catch (e: Exception) {
-            android.util.Log.e("YellPay", "Bridge test failed: ${e.message}", e)
-            promise.reject("BRIDGE_ERROR", "Bridge test failed: ${e.message}", e)
-        }
-    }
-
-    @ReactMethod
-    fun testSimpleMethod(promise: Promise) {
-        android.util.Log.d("YellPay", "=== SIMPLE METHOD TEST CALLED ===")
-        try {
-            val result = WritableNativeMap()
-            result.putString("message", "Simple method is working!")
-            result.putString("timestamp", System.currentTimeMillis().toString())
-            promise.resolve(result)
-        } catch (e: Exception) {
-            android.util.Log.e("YellPay", "Simple method test failed: ${e.message}", e)
-            promise.reject("SIMPLE_ERROR", "Simple method test failed: ${e.message}", e)
-        }
-    }
-
-    @ReactMethod
-    fun testMethodWithParams(param1: String, param2: Int, promise: Promise) {
-        android.util.Log.d("YellPay", "=== METHOD WITH PARAMS TEST CALLED ===")
-        android.util.Log.d("YellPay", "testMethodWithParams() - param1: '$param1', param2: $param2")
-        try {
-            val result = WritableNativeMap()
-            result.putString("message", "Method with params is working!")
-            result.putString("param1", param1)
-            result.putInt("param2", param2)
-            result.putString("timestamp", System.currentTimeMillis().toString())
-            promise.resolve(result)
-        } catch (e: Exception) {
-            android.util.Log.e("YellPay", "Method with params test failed: ${e.message}", e)
-            promise.reject("PARAMS_ERROR", "Method with params test failed: ${e.message}", e)
-        }
-    }
-
-    @ReactMethod
-    fun testRegisterCardSignature(uuid: String, userNo: Int, payUserId: String, promise: Promise) {
-        android.util.Log.d("YellPay", "=== TEST REGISTER CARD SIGNATURE CALLED ===")
-        android.util.Log.d("YellPay", "testRegisterCardSignature() - uuid: '$uuid', userNo: $userNo, payUserId: '$payUserId'")
-        try {
-            val result = WritableNativeMap()
-            result.putString("message", "Register card signature test is working!")
-            result.putString("uuid", uuid)
-            result.putInt("userNo", userNo)
-            result.putString("payUserId", payUserId)
-            result.putString("timestamp", System.currentTimeMillis().toString())
-            promise.resolve(result)
-        } catch (e: Exception) {
-            android.util.Log.e("YellPay", "Register card signature test failed: ${e.message}", e)
-            promise.reject("SIGNATURE_ERROR", "Register card signature test failed: ${e.message}", e)
-        }
-    }
-
-    @ReactMethod
-    fun testCardRegistration(uuid: String, userNo: Int, payUserId: String, promise: Promise) {
-        android.util.Log.d("YellPay", "=== TEST CARD REGISTRATION CALLED ===")
-        android.util.Log.d("YellPay", "testCardRegistration() - uuid: '$uuid', userNo: $userNo, payUserId: '$payUserId'")
-        try {
-            val result = WritableNativeMap()
-            result.putString("message", "Card registration test is working!")
-            result.putString("uuid", uuid)
-            result.putInt("userNo", userNo)
-            result.putString("payUserId", payUserId)
-            result.putString("timestamp", System.currentTimeMillis().toString())
-            promise.resolve(result)
-        } catch (e: Exception) {
-            android.util.Log.e("YellPay", "Card registration test failed: ${e.message}", e)
-            promise.reject("CARD_REG_ERROR", "Card registration test failed: ${e.message}", e)
-        }
-    }
+    // ===== END TEST METHODS (removed) =====
 
     private val routeAuth = RouteAuth()
     private val routePay = RoutePay()
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    // ===== INTERNAL HELPERS FOR NON-INTERRUPTIVE ERROR HANDLING =====
+
+    private fun resolvePromiseSafe(promise: Promise, value: Any?) {
+        try {
+            promise.resolve(value)
+        } catch (e: Exception) {
+            android.util.Log.e("YellPay", "resolvePromiseSafe() - resolve failed: ${e.message}")
+        }
+    }
+
+    private fun resolveError(promise: Promise, code: String, message: String) {
+        val map = WritableNativeMap()
+        map.putBoolean("error", true)
+        map.putString("code", code)
+        map.putString("message", message)
+        resolvePromiseSafe(promise, map)
+    }
+
+    private fun resolveEmptyArray(promise: Promise) {
+        resolvePromiseSafe(promise, WritableNativeArray())
+    }
+
     @ReactMethod
     fun addCard(uuid: String, userNo: Int, payUserId: String, promise: Promise) {
-        android.util.Log.d("YellPay", "=== ADD CARD METHOD CALLED ===")
-        android.util.Log.d("YellPay", "addCard() - Input UUID: '$uuid', UserNo: $userNo, PayUserId: '$payUserId'")
-        
         try {
-            android.util.Log.d("YellPay", "addCard() - Step 1: Checking RouteCode SDK instance...")
-            android.util.Log.d("YellPay", "addCard() - RouteCode SDK version: ${try { routePay.javaClass.name } catch (e: Exception) { "Unknown" }}")
-            android.util.Log.d("YellPay", "addCard() - RouteCode SDK instance: ${routePay}")
-            
-            android.util.Log.d("YellPay", "addCard() - Step 2: Getting current activity...")
             val activity = getSafeCurrentActivity()
             if (activity == null) {
-                android.util.Log.e("YellPay", "addCard() - FAILED: No current activity available")
-                rejectWithActivityError(promise, "add card")
+                resolveError(promise, "ACTIVITY_ERROR", "No current activity available for add card")
                 return
             }
-            android.util.Log.d("YellPay", "addCard() - Activity found: ${activity.javaClass.simpleName}")
-
-            android.util.Log.d("YellPay", "addCard() - Step 3: Validating inputs...")
             if (uuid.isBlank()) {
-                android.util.Log.e("YellPay", "addCard() - FAILED: UUID is empty")
-                promise.reject("INVALID_UUID", "UUID cannot be empty. Please initialize user first.")
+                resolveError(promise, "INVALID_UUID", "UUID cannot be empty")
                 return
             }
-            android.util.Log.d("YellPay", "addCard() - Input validation passed")
-
-            android.util.Log.d("YellPay", "addCard() - Step 4: About to call RouteCode SDK...")
-            android.util.Log.d("YellPay", "addCard() - SDK Parameters: UUID='$uuid', UserNo=$userNo, PayUserId='$payUserId', Activity=${activity.javaClass.simpleName}, Mode=Production")
-
-            android.util.Log.d("YellPay", "addCard() - Step 5: Checking if we're on main thread...")
-            val isMainThread = Looper.myLooper() == Looper.getMainLooper()
-            android.util.Log.d("YellPay", "addCard() - Is main thread: $isMainThread")
-
             runOnMainThread {
-                android.util.Log.d("YellPay", "addCard() - Step 6: Now running on main thread")
-                
                 try {
-                    android.util.Log.d("YellPay", "addCard() - Step 7: Calling routePay.callCardRegister()...")
-                    android.util.Log.d("YellPay", "addCard() - Attempting SDK call with parameters:")
-                    android.util.Log.d("YellPay", "addCard() -   uuid: '$uuid'")
-                    android.util.Log.d("YellPay", "addCard() -   userNo: $userNo")
-                    android.util.Log.d("YellPay", "addCard() -   payUserId: '$payUserId'")
-                    android.util.Log.d("YellPay", "addCard() -   activity: ${activity.javaClass.simpleName}")
-                    android.util.Log.d("YellPay", "addCard() -   environmentMode: Production")
-                    
-                    android.util.Log.d("YellPay", "addCard() - Step 8: About to call SDK method...")
-                    
-                    try {
-                        android.util.Log.d("YellPay", "addCard() - Step 9: Calling routePay.callCardRegister() NOW...")
-                        
-                        routePay.callCardRegister(
-                            uuid,
-                            userNo,
-                            payUserId,
-                            activity,
-                            EnvironmentMode.Production,
-                            object : RoutePay.ResponseCardRegistCallback {
+                    routePay.callCardRegister(
+                        uuid,
+                        userNo,
+                        payUserId,
+                        activity,
+                        EnvironmentMode.Production,
+                        object : RoutePay.ResponseCardRegistCallback {
                             override fun success(uuid: String, userNo: Int) {
-                                try {
-                                    android.util.Log.d("YellPay", "addCard() - SDK SUCCESS CALLBACK - UUID: $uuid, UserNo: $userNo")
-                                    val response = WritableNativeMap()
-                                    response.putString("uuid", uuid)
-                                    response.putInt("userNo", userNo)
-                                    response.putString("message", "Card registration completed successfully")
-                                    android.util.Log.d("YellPay", "addCard() - Resolving promise with success")
-                                    promise.resolve(response)
-                                } catch (e: Exception) {
-                                    android.util.Log.e("YellPay", "addCard() - Exception in success callback: ${e.message}", e)
-                                    promise.reject("CARD_CALLBACK_ERROR", "Error processing card registration: ${e.message}", e)
-                                }
+                                val response = WritableNativeMap()
+                                response.putString("uuid", uuid)
+                                response.putInt("userNo", userNo)
+                                resolvePromiseSafe(promise, response)
                             }
-
                             override fun failed(errorCode: Int, errorMessage: String) {
-                                android.util.Log.e("YellPay", "addCard() - SDK FAILED CALLBACK - Code: $errorCode, Message: $errorMessage")
-                                promise.reject("CARD_REGISTER_ERROR", "Card registration failed (Code: $errorCode): $errorMessage")
+                                android.util.Log.e("YellPay", "addCard() - failed: $errorCode $errorMessage")
+                                resolveError(promise, "CARD_REGISTER_ERROR", "Card registration failed ($errorCode): $errorMessage")
                             }
                         }
-                        )
-                        android.util.Log.d("YellPay", "addCard() - Step 10: SDK method call completed, waiting for callback...")
-                    } catch (e: Exception) {
-                        android.util.Log.e("YellPay", "addCard() - Exception during SDK call: ${e.message}", e)
-                        android.util.Log.e("YellPay", "addCard() - Exception stack trace:", e)
-                        promise.reject("CARD_REGISTER_SDK_ERROR", "SDK call failed: ${e.message}", e)
-                    }
-                    
+                    )
                 } catch (e: Exception) {
-                    android.util.Log.e("YellPay", "addCard() - Exception during SDK call: ${e.message}", e)
-                    android.util.Log.e("YellPay", "addCard() - Exception stack trace:", e)
-                    promise.reject("CARD_REGISTER_ERROR", "Exception during SDK call: ${e.message}", e)
+                    android.util.Log.e("YellPay", "addCard() - exception: ${e.message}", e)
+                    resolveError(promise, "CARD_REGISTER_SDK_ERROR", e.message ?: "SDK call failed")
                 }
             }
-            
-            android.util.Log.d("YellPay", "addCard() - Step 11: runOnMainThread called, waiting for execution...")
-            
         } catch (e: Exception) {
-            android.util.Log.e("YellPay", "Add card exception: ${e.message}", e)
-            android.util.Log.e("YellPay", "Add card exception stack trace:", e)
-            promise.reject("CARD_REGISTER_ERROR", e.message ?: "Unknown error in addCard", e)
+            android.util.Log.e("YellPay", "addCard() outer exception: ${e.message}", e)
+            resolveError(promise, "CARD_REGISTER_ERROR", e.message ?: "Unknown error")
         }
     }
 
@@ -578,37 +460,47 @@ class YellPayModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
                     android.util.Log.d("YellPay", "registerCard() - Step 8: About to call SDK method...")
                     
                     try {
+                        // Timeout protection in case SDK never calls back
+                        val completed = AtomicBoolean(false)
+                        val timeoutRunnable = Runnable {
+                            if (completed.compareAndSet(false, true)) {
+                                android.util.Log.e("YellPay", "registerCard() - TIMEOUT waiting for SDK callback")
+                                promise.reject("CARD_REGISTER_TIMEOUT", "Card registration timed out after 20 seconds")
+                            }
+                        }
+                        mainHandler.postDelayed(timeoutRunnable, 20_000)
                         android.util.Log.d("YellPay", "registerCard() - Step 9: Calling routePay.callCardRegister() NOW...")
-                        
-                        // Using correct RouteCode SDK signature: callCardRegister(String uuid, int userNo, String payUserId, Activity activity, EnvironmentMode environmentMode, ResponseCardRegistCallback callback)
-                        // The RouteCode SDK will show a full UI screen for card registration
+
+                        // Align to working example: treat payUserId (or uuid) as userId for SDK
+                        val userIdForSdk = if (payUserId.isNotBlank()) payUserId else uuid
                         routePay.callCardRegister(
-                            uuid,                     // uuid from initUser
-                            userNo,                   // user number (usually 0)
-                            payUserId,                // payUserId parameter (FIXED!)
+                            userIdForSdk,
+                            0,
                             activity,
                             EnvironmentMode.Production,
                             object : RoutePay.ResponseCardRegistCallback {
-                            override fun success(uuid: String, userNo: Int) {
-                                try {
-                                    android.util.Log.d("YellPay", "registerCard() - SDK SUCCESS CALLBACK - UUID: $uuid, UserNo: $userNo")
-                                    val response = WritableNativeMap()
-                                    response.putString("uuid", uuid)
-                                    response.putInt("userNo", userNo)
-                                    response.putString("message", "Card registration completed successfully")
-                                    android.util.Log.d("YellPay", "registerCard() - Resolving promise with success")
-                                    promise.resolve(response)
-                                } catch (e: Exception) {
-                                    android.util.Log.e("YellPay", "registerCard() - Exception in success callback: ${e.message}", e)
-                                    promise.reject("CARD_CALLBACK_ERROR", "Error processing card registration: ${e.message}", e)
+                                override fun success(message: String, status: Int) {
+                                    try {
+                                        if (!completed.compareAndSet(false, true)) return
+                                        mainHandler.removeCallbacks(timeoutRunnable)
+                                        android.util.Log.d("YellPay", "registerCard() - SDK SUCCESS CALLBACK - status: $status, message: $message")
+                                        val response = WritableNativeMap()
+                                        response.putInt("status", status)
+                                        response.putString("message", message)
+                                        promise.resolve(response)
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("YellPay", "registerCard() - Exception in success callback: ${e.message}", e)
+                                        promise.reject("CARD_CALLBACK_ERROR", "Error processing card registration: ${e.message}", e)
+                                    }
+                                }
+
+                                override fun failed(errorCode: Int, errorMessage: String) {
+                                    if (!completed.compareAndSet(false, true)) return
+                                    mainHandler.removeCallbacks(timeoutRunnable)
+                                    android.util.Log.e("YellPay", "registerCard() - SDK FAILED CALLBACK - Code: $errorCode, Message: $errorMessage")
+                                    promise.reject("CARD_REGISTER_ERROR", "Card registration failed (Code: $errorCode): $errorMessage")
                                 }
                             }
-
-                            override fun failed(errorCode: Int, errorMessage: String) {
-                                android.util.Log.e("YellPay", "registerCard() - SDK FAILED CALLBACK - Code: $errorCode, Message: $errorMessage")
-                                promise.reject("CARD_REGISTER_ERROR", "Card registration failed (Code: $errorCode): $errorMessage")
-                            }
-                        }
                         )
                         android.util.Log.d("YellPay", "registerCard() - Step 10: SDK method call completed, waiting for callback...")
                     } catch (e: Exception) {
@@ -643,7 +535,7 @@ class YellPayModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
             val activity = getSafeCurrentActivity()
             if (activity == null) {
                 android.util.Log.e("YellPay", "makePayment() - FAILED: No current activity available")
-                rejectWithActivityError(promise, "make payment")
+                resolveError(promise, "ACTIVITY_ERROR", "No current activity available for make payment")
                 return
             }
             android.util.Log.d("YellPay", "makePayment() - Activity found: ${activity.javaClass.simpleName}")
@@ -651,13 +543,13 @@ class YellPayModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
             // Validate inputs
             if (uuid.isBlank()) {
                 android.util.Log.e("YellPay", "makePayment() - FAILED: UUID is empty")
-                promise.reject("INVALID_UUID", "UUID cannot be empty. Please initialize user first.")
+                resolveError(promise, "INVALID_UUID", "UUID cannot be empty")
                 return
             }
             
             if (payUserId.isBlank()) {
                 android.util.Log.e("YellPay", "makePayment() - FAILED: PayUserId is empty")
-                promise.reject("INVALID_PAY_USER_ID", "PayUserId cannot be empty. Please initialize user first.")
+                resolveError(promise, "INVALID_PAY_USER_ID", "PayUserId cannot be empty")
                 return
             }
             android.util.Log.d("YellPay", "makePayment() - Input validation passed")
@@ -671,47 +563,72 @@ class YellPayModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
                 
                 try {
                     android.util.Log.d("YellPay", "makePayment() - Calling routePay.callPayment()...")
-                    
-                    // Using correct RouteCode SDK signature: callPayment(String uuid, int userNo, String payUserId, Activity activity, EnvironmentMode environmentMode, ResponsePaymentCallback callback)
-                    // The RouteCode SDK will show a full payment UI screen with card selection, OTP input, etc.
-                    routePay.callPayment(
-                        uuid,                     // uuid from initUser
-                        userNo,                   // user number (amount will be handled by SDK UI)
-                        payUserId,                // payUserId parameter (FIXED!)
+                    // Timeout protection in case SDK never calls back
+                    val completed = AtomicBoolean(false)
+                    val timeoutRunnable = Runnable {
+                        if (completed.compareAndSet(false, true)) {
+                            android.util.Log.e("YellPay", "makePayment() - TIMEOUT waiting for SDK callback")
+                            resolveError(promise, "PAYMENT_TIMEOUT", "Payment timed out")
+                        }
+                    }
+                    mainHandler.postDelayed(timeoutRunnable, 20_000)
+
+                    // Align with working example: first get main card to obtain uuid/userNo, then call payment
+                    routePay.callGetMainCreditCard(
                         activity,
-                        EnvironmentMode.Production,
-                        object : RoutePay.ResponsePaymentCallback {
-                            override fun success(uuid: String, userNo: Int) {
-                                try {
-                                    android.util.Log.d("YellPay", "makePayment() - SDK SUCCESS CALLBACK - UUID: $uuid, UserNo: $userNo")
-                                    val response = WritableNativeMap()
-                                    response.putString("uuid", uuid)
-                                    response.putInt("userNo", userNo)
-                                    response.putString("message", "Payment completed successfully")
-                                    android.util.Log.d("YellPay", "makePayment() - Resolving promise with success")
-                                    promise.resolve(response)
-                                } catch (e: Exception) {
-                                    android.util.Log.e("YellPay", "makePayment() - Exception in success callback: ${e.message}", e)
-                                    promise.reject("PAYMENT_CALLBACK_ERROR", "Error processing payment: ${e.message}", e)
-                                }
+                        object : RoutePay.ResponseGetMainCreditCardCallback {
+                            override fun success(cardUuid: String, cardUserNo: Int, creditCardNo: String, creditCardExp: String) {
+                                android.util.Log.d("YellPay", "makePayment() - Got main card uuid=$cardUuid userNo=$cardUserNo")
+                                routePay.callPayment(
+                                    cardUuid,
+                                    cardUserNo,
+                                    payUserId,
+                                    activity,
+                                    EnvironmentMode.Production,
+                                    object : RoutePay.ResponsePaymentCallback {
+                                        override fun success(message: String, status: Int) {
+                                            try {
+                                                if (!completed.compareAndSet(false, true)) return
+                                                mainHandler.removeCallbacks(timeoutRunnable)
+                                                android.util.Log.d("YellPay", "makePayment() - SDK SUCCESS CALLBACK - status: $status, message: $message")
+                                                val response = WritableNativeMap()
+                                                response.putInt("status", status)
+                                                response.putString("message", message)
+                                                resolvePromiseSafe(promise, response)
+                                            } catch (e: Exception) {
+                                                android.util.Log.e("YellPay", "makePayment() - Exception in success callback: ${e.message}", e)
+                                                resolveError(promise, "PAYMENT_CALLBACK_ERROR", e.message ?: "Callback error")
+                                            }
+                                        }
+
+                                        override fun failed(errorCode: Int, errorMessage: String?) {
+                                            if (!completed.compareAndSet(false, true)) return
+                                            mainHandler.removeCallbacks(timeoutRunnable)
+                                            android.util.Log.e("YellPay", "makePayment() - SDK FAILED CALLBACK - Code: $errorCode, Message: $errorMessage")
+                                            resolveError(promise, "PAYMENT_ERROR", "Payment failed ($errorCode): ${errorMessage ?: ""}")
+                                        }
+                                    }
+                                )
                             }
 
                             override fun failed(errorCode: Int, errorMessage: String) {
-                                android.util.Log.e("YellPay", "makePayment() - SDK FAILED CALLBACK - Code: $errorCode, Message: $errorMessage")
-                                promise.reject("PAYMENT_ERROR", "Payment failed (Code: $errorCode): $errorMessage")
+                                if (!completed.compareAndSet(false, true)) return
+                                mainHandler.removeCallbacks(timeoutRunnable)
+                                android.util.Log.e("YellPay", "makePayment() - getMainCreditCard FAILED - Code: $errorCode, Message: $errorMessage")
+                                resolveError(promise, "MAIN_CARD_ERROR", "Get main card failed ($errorCode): $errorMessage")
                             }
                         }
                     )
                     android.util.Log.d("YellPay", "makePayment() - SDK method call completed, waiting for callback...")
-                    
+
                 } catch (e: Exception) {
                     android.util.Log.e("YellPay", "makePayment() - Exception during SDK call: ${e.message}", e)
-                    promise.reject("PAYMENT_ERROR", "Exception during SDK call: ${e.message}", e)
+                    resolveError(promise, "PAYMENT_ERROR", e.message ?: "Exception during SDK call")
                 }
             }
         } catch (e: Exception) {
             android.util.Log.e("YellPay", "Payment exception: ${e.message}", e)
-            promise.reject("PAYMENT_ERROR", e.message ?: "Unknown error in makePayment", e)
+            resolveError(promise, "PAYMENT_ERROR", e.message ?: "Unknown error in makePayment")
         }
     }
 
@@ -720,13 +637,13 @@ class YellPayModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
         try {
             val activity = getSafeCurrentActivity()
             if (activity == null) {
-                rejectWithActivityError(promise, "get history")
+                resolveError(promise, "ACTIVITY_ERROR", "No current activity available for get history")
                 return
             }
 
             // Validate inputs
             if (userId.isBlank()) {
-                promise.reject("INVALID_USER_ID", "UserId cannot be empty. Please initialize user first.")
+                resolveError(promise, "INVALID_USER_ID", "UserId cannot be empty")
                 return
             }
 
@@ -740,28 +657,21 @@ class YellPayModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
                 EnvironmentMode.Production,
                 object : RoutePay.ResponseCallPayHistoryCallback {
                     override fun success(payUserId: String) {
-                        try {
-                            android.util.Log.d("YellPay", "Payment history success - PayUserId: $payUserId")
-                            val response = WritableNativeMap()
-                            response.putString("payUserId", payUserId)
-                            response.putString("message", "Payment history screen was displayed. If empty, this means no transactions have been made yet.")
-                            response.putBoolean("screenDisplayed", true)
-                            response.putString("note", "The SDK shows its own UI screen for transaction history. Empty screen is normal for new users.")
-                            promise.resolve(response)
-                        } catch (e: Exception) {
-                            promise.reject("HISTORY_CALLBACK_ERROR", "Error processing history: ${e.message}", e)
-                        }
+                        val response = WritableNativeMap()
+                        response.putString("payUserId", payUserId)
+                        response.putBoolean("screenDisplayed", true)
+                        resolvePromiseSafe(promise, response)
                     }
 
                     override fun failed(errorCode: Int, errorMessage: String) {
                         android.util.Log.e("YellPay", "Payment history failed - Code: $errorCode, Message: $errorMessage")
-                        promise.reject("HISTORY_ERROR", "Payment history failed (Code: $errorCode): $errorMessage")
+                        resolveError(promise, "HISTORY_ERROR", "Payment history failed ($errorCode): $errorMessage")
                     }
                 }
             )
         } catch (e: Exception) {
             android.util.Log.e("YellPay", "Payment history exception: ${e.message}", e)
-            promise.reject("HISTORY_ERROR", e.message ?: "Unknown error in getHistory", e)
+            resolveError(promise, "HISTORY_ERROR", e.message ?: "Unknown error in getHistory")
         }
     }
 
@@ -775,7 +685,7 @@ class YellPayModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
             val activity = getSafeCurrentActivity()
             if (activity == null) {
                 android.util.Log.e("YellPay", "paymentForQR() - FAILED: No current activity available")
-                rejectWithActivityError(promise, "QR payment")
+                resolveError(promise, "ACTIVITY_ERROR", "No current activity available for QR payment")
                 return
             }
             android.util.Log.d("YellPay", "paymentForQR() - Activity found: ${activity.javaClass.simpleName}")
@@ -783,13 +693,13 @@ class YellPayModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
             // Validate inputs
             if (uuid.isBlank()) {
                 android.util.Log.e("YellPay", "paymentForQR() - FAILED: UUID is empty")
-                promise.reject("INVALID_UUID", "UUID cannot be empty. Please initialize user first.")
+                resolveError(promise, "INVALID_UUID", "UUID cannot be empty")
                 return
             }
             
             if (payUserId.isBlank()) {
                 android.util.Log.e("YellPay", "paymentForQR() - FAILED: PayUserId is empty")
-                promise.reject("INVALID_PAY_USER_ID", "PayUserId cannot be empty. Please initialize user first.")
+                resolveError(promise, "INVALID_PAY_USER_ID", "PayUserId cannot be empty")
                 return
             }
             android.util.Log.d("YellPay", "paymentForQR() - Input validation passed")
@@ -803,47 +713,73 @@ class YellPayModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
                 
                 try {
                     android.util.Log.d("YellPay", "paymentForQR() - Calling routePay.callPaymentForQR()...")
-                    
-                    // The RouteCode SDK QR payment will open camera interface for QR scanning
-                    // Using correct SDK signature: callPaymentForQR(String uuid, int userNo, String payUserId, Activity activity, EnvironmentMode environmentMode, ResponsePaymentCallback callback)
-                    routePay.callPaymentForQR(
-                        uuid,                     // uuid from initUser
-                        userNo,                   // user number
-                        payUserId,                // payUserId parameter (FIXED!)
+                    // Timeout protection in case SDK never calls back
+                    val completed = AtomicBoolean(false)
+                    val timeoutRunnable = Runnable {
+                        if (completed.compareAndSet(false, true)) {
+                            android.util.Log.e("YellPay", "paymentForQR() - TIMEOUT waiting for SDK callback")
+                            resolveError(promise, "QR_PAYMENT_TIMEOUT", "QR payment timed out")
+                        }
+                    }
+                    mainHandler.postDelayed(timeoutRunnable, 20_000)
+
+                    // Align to working example: fetch main card (uuid,userNo), then call QR with userId
+                    val userIdForSdk = if (payUserId.isNotBlank()) payUserId else uuid
+                    routePay.callGetMainCreditCard(
                         activity,
-                        EnvironmentMode.Production,
-                        object : RoutePay.ResponsePaymentCallback {
-                            override fun success(uuid: String, userNo: Int) {
-                                try {
-                                    android.util.Log.d("YellPay", "paymentForQR() - SDK SUCCESS CALLBACK - UUID: $uuid, UserNo: $userNo")
-                                    val response = WritableNativeMap()
-                                    response.putString("uuid", uuid)
-                                    response.putInt("userNo", userNo)
-                                    response.putString("message", "QR payment completed successfully")
-                                    android.util.Log.d("YellPay", "paymentForQR() - Resolving promise with success")
-                                    promise.resolve(response)
-                                } catch (e: Exception) {
-                                    android.util.Log.e("YellPay", "paymentForQR() - Exception in success callback: ${e.message}", e)
-                                    promise.reject("QR_PAYMENT_CALLBACK_ERROR", "Error processing QR payment: ${e.message}", e)
-                                }
+                        object : RoutePay.ResponseGetMainCreditCardCallback {
+                            override fun success(cardUuid: String, cardUserNo: Int, creditCardNo: String, creditCardExp: String) {
+                                android.util.Log.d("YellPay", "paymentForQR() - Got main card uuid=$cardUuid userNo=$cardUserNo")
+                                routePay.callPaymentForQR(
+                                    cardUuid,
+                                    cardUserNo,
+                                    userIdForSdk,
+                                    activity,
+                                    EnvironmentMode.Production,
+                                    object : RoutePay.ResponsePaymentCallback {
+                                        override fun success(message: String, status: Int) {
+                                            try {
+                                                if (!completed.compareAndSet(false, true)) return
+                                                mainHandler.removeCallbacks(timeoutRunnable)
+                                                android.util.Log.d("YellPay", "paymentForQR() - SDK SUCCESS CALLBACK - status: $status, message: $message")
+                                                val response = WritableNativeMap()
+                                                response.putInt("status", status)
+                                                response.putString("message", message)
+                                                resolvePromiseSafe(promise, response)
+                                            } catch (e: Exception) {
+                                                android.util.Log.e("YellPay", "paymentForQR() - Exception in success callback: ${e.message}", e)
+                                                resolveError(promise, "QR_PAYMENT_CALLBACK_ERROR", e.message ?: "Callback error")
+                                            }
+                                        }
+
+                                        override fun failed(errorCode: Int, errorMessage: String?) {
+                                            if (!completed.compareAndSet(false, true)) return
+                                            mainHandler.removeCallbacks(timeoutRunnable)
+                                            android.util.Log.e("YellPay", "paymentForQR() - SDK FAILED CALLBACK - Code: $errorCode, Message: $errorMessage")
+                                            resolveError(promise, "QR_PAYMENT_ERROR", "QR payment failed ($errorCode): ${errorMessage ?: ""}")
+                                        }
+                                    }
+                                )
                             }
 
                             override fun failed(errorCode: Int, errorMessage: String) {
-                                android.util.Log.e("YellPay", "paymentForQR() - SDK FAILED CALLBACK - Code: $errorCode, Message: $errorMessage")
-                                promise.reject("QR_PAYMENT_ERROR", "QR payment failed (Code: $errorCode): $errorMessage")
+                                if (!completed.compareAndSet(false, true)) return
+                                mainHandler.removeCallbacks(timeoutRunnable)
+                                android.util.Log.e("YellPay", "paymentForQR() - getMainCreditCard FAILED - Code: $errorCode, Message: $errorMessage")
+                                resolveError(promise, "MAIN_CARD_ERROR", "Get main card failed ($errorCode): $errorMessage")
                             }
                         }
                     )
                     android.util.Log.d("YellPay", "paymentForQR() - SDK method call completed, waiting for callback...")
-                    
+
                 } catch (e: Exception) {
                     android.util.Log.e("YellPay", "paymentForQR() - Exception during SDK call: ${e.message}", e)
-                    promise.reject("QR_PAYMENT_ERROR", "Exception during SDK call: ${e.message}", e)
+                    resolveError(promise, "QR_PAYMENT_ERROR", e.message ?: "Exception during SDK call")
                 }
             }
         } catch (e: Exception) {
             android.util.Log.e("YellPay", "QR payment exception: ${e.message}", e)
-            promise.reject("QR_PAYMENT_ERROR", e.message ?: "Unknown error in paymentForQR", e)
+            resolveError(promise, "QR_PAYMENT_ERROR", e.message ?: "Unknown error in paymentForQR")
         }
     }
 

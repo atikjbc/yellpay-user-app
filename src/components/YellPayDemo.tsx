@@ -43,7 +43,7 @@ const YellPayDemo: React.FC = () => {
   const [state, setState] = useState<DemoState>({
     serviceId: 'yellpay',
     authDomain: 'auth.unid.net',
-    paymentDomain: 'yellpay.unid.net',
+    paymentDomain: 'dev-pay.unid.net',
     userInfo: 'test_user_123',
     userId: '',
     amount: '1000',
@@ -608,7 +608,7 @@ const YellPayDemo: React.FC = () => {
             style={styles.input}
             value={state.paymentDomain}
             onChangeText={text => updateState('paymentDomain', text)}
-            placeholder="yellpay.unid.net (production)"
+            placeholder="dev-pay.unid.net (production)"
           />
         </View>
 

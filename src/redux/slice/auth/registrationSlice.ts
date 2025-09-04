@@ -5,6 +5,7 @@ export interface RegistrationState {
   email: string | null;
   token: string | null; // saved for all future requests
   registeredAt: string | null;
+  userId: string | null;
 }
 
 const initialState: RegistrationState = {
@@ -12,6 +13,7 @@ const initialState: RegistrationState = {
   email: null,
   token: null,
   registeredAt: null,
+  userId: null,
 };
 
 const registrationSlice = createSlice({
@@ -28,8 +30,12 @@ const registrationSlice = createSlice({
       state.registeredAt = new Date().toISOString();
     },
     clearRegistration: () => initialState,
+    setUserId: (state, action: PayloadAction<string>) => {
+      state.userId = action.payload;
+    },
   },
 });
 
-export const { setRegistration, clearRegistration } = registrationSlice.actions;
+export const { setRegistration, clearRegistration, setUserId } =
+  registrationSlice.actions;
 export default registrationSlice.reducer;
