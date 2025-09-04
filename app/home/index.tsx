@@ -134,6 +134,28 @@ const Home = () => {
               近くの店舗を探す
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push('/debug')}
+            activeOpacity={0.8}
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingVertical: 16,
+              backgroundColor: '#ff6b6b',
+              borderRadius: 10,
+              marginTop: 16,
+            }}
+          >
+            <Text
+              sx={{
+                ...textStyle.H_W6_13,
+                color: colors.wt,
+                textAlign: 'center',
+              }}
+            >
+              🔧 YellPay Debug
+            </Text>
+          </TouchableOpacity>
         </VStack>
         <BannerSlider
           images={[
