@@ -90,7 +90,7 @@ android {
     namespace 'com.anonymous.YellPay'
     defaultConfig {
         applicationId 'com.anonymous.YellPay'
-        minSdkVersion rootProject.ext.minSdkVersion
+        minSdkVersion 31
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
